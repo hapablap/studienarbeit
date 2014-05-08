@@ -10,12 +10,23 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 
+// Furiour Library http://www.phon.ucl.ac.uk/home/mark/basicdsp/
+
 namespace EEGETAnalysis
 {
     public partial class Form1 : Form
     {
         string csvFilePath = null;
         string mediaFilePath = null;
+        double mediaDuration = 0;
+        double frequence = 60;
+
+        public Double Duration(String file)
+        {
+            WMPLib.WindowsMediaPlayer wmp = new WMPLib.WindowsMediaPlayerClass();
+            WMPLib.IWMPMedia mediainfo = wmp.newMedia(file);
+            return mediainfo.duration;
+        }
 
         public Form1()
         {
@@ -82,6 +93,8 @@ namespace EEGETAnalysis
             windowsMediaPlayer.URL = mediaFilePath;
             windowsMediaPlayer.Ctlcontrols.stop();
 
+            mediaDuration = Duration(mediaFilePath);
+
             CsvParser parser = new CsvParser(csvFilePath);
             List<List<string>> result = parser.Parse();
 
@@ -115,6 +128,89 @@ namespace EEGETAnalysis
             for (int j = 0; j < eegt7.Count; j++)
             {
                 EEGChart.Series[0].Points.AddXY(time[j], eegt7[j]);
+            }
+
+            playButton.Enabled = true;
+            stopButton.Enabled = true;
+            pauseButton.Enabled = true;
+            rewindButton.Enabled = true;
+
+            selectCsvFileButton.Enabled = false;
+            selectMediaFileButton.Enabled = false;
+
+            startAnalysisButton.Enabled = false;
+
+            trackBar.Enabled = true;
+        }
+
+        private void playButton_Click(object sender, EventArgs e)
+        {
+            //windowsMediaPlayer.Ctlcontrols.play();
+            videoPlayTimer.Enabled = true;
+        }
+
+        private void pauseButton_Click(object sender, EventArgs e)
+        {
+            windowsMediaPlayer.Ctlcontrols.pause();
+            videoPlayTimer.Enabled = false;
+        }
+
+        private void stopButton_Click(object sender, EventArgs e)
+        {
+            windowsMediaPlayer.Ctlcontrols.stop();
+            videoPlayTimer.Enabled = false;
+        }
+
+        private void rewindButton_Click(object sender, EventArgs e)
+        {
+            windowsMediaPlayer.Ctlcontrols.currentPosition = 0;
+        }
+
+        private void resetButton_Click(object sender, EventArgs e)
+        {
+            csvFilePath = null;
+            mediaFilePath = null;
+            playButton.Enabled = false;
+            stopButton.Enabled = false;
+            pauseButton.Enabled = false;
+            rewindButton.Enabled = false;
+
+            selectCsvFileButton.Enabled = true;
+            selectMediaFileButton.Enabled = true;
+
+            mediaFilePathTextBox.Text = mediaFilePath;
+            csvFilePathTextBox.Text = csvFilePath;
+
+            windowsMediaPlayer.Ctlcontrols.stop();
+            windowsMediaPlayer.URL = null;
+
+            trackBar.Enabled = false;
+
+            EEGChart.Series.Clear();
+        }
+
+        private void trackBar_Scroll(object sender, EventArgs e)
+        {
+            double newPosition = mediaDuration * ((double)trackBar.Value/100);
+            windowsMediaPlayer.Ctlcontrols.currentPosition = newPosition;
+        }
+
+        private void videoPlayTimer_Tick(object sender, EventArgs e)
+        {
+            int newTrackBarValue = (int)((windowsMediaPlayer.Ctlcontrols.currentPosition / mediaDuration)*100);
+
+            if (newTrackBarValue <= trackBar.Maximum)
+            {
+                trackBar.Value = newTrackBarValue;
+            }
+        }
+
+        private void windowsMediaPlayer_PlayStateChange(object sender, AxWMPLib._WMPOCXEvents_PlayStateChangeEvent e)
+        {
+            // media ended, disable timer
+            if (e.newState == 8)
+            {
+                videoPlayTimer.Enabled = false;
             }
         }
     }
