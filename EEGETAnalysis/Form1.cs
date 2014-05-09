@@ -18,8 +18,22 @@ namespace EEGETAnalysis
     {
         string csvFilePath = null;
         string mediaFilePath = null;
+
+        // Duration of current media
         double mediaDuration = 0;
-        double frequence = 60;
+
+        // BeGaze CSV data
+        List<List<string>> csvData = null;
+
+        // timestamps
+        List<string> time = null;
+
+        // EEG data from T7
+        List<string> eegt7 = null;
+
+        // eye tracking coordinates
+        List<string> LPORX = null;
+        List<string> LPORY = null;
 
         public Double Duration(String file)
         {
@@ -95,57 +109,71 @@ namespace EEGETAnalysis
 
             mediaDuration = Duration(mediaFilePath);
 
-            CsvParser parser = new CsvParser(csvFilePath);
-            List<List<string>> result = parser.Parse();
-
-            EEGChart.Series.Clear(); //ensure that the chart is empty
-            EEGChart.Series.Add("T7");
-            EEGChart.Series[0].ChartType = SeriesChartType.Line;
-            EEGChart.Legends.Clear();
-
-            List<string> time = null;
-            List<string> eegt7 = null;
-
-            foreach (List<string> item in result)
+            try
             {
-                if (item[0] == "Time")
+                CsvParser parser = new CsvParser(csvFilePath);
+                csvData = parser.Parse();
+
+                EEGChart.Series.Clear(); //ensure that the chart is empty
+                EEGChart.Series.Add("T7");
+                EEGChart.Series[0].ChartType = SeriesChartType.Line;
+                EEGChart.Legends.Clear();
+
+                foreach (List<string> item in csvData)
                 {
-                    time = item;
+                    if (item[0] == "Time")
+                    {
+                        time = item;
+                    }
+
+                    if (item[0] == "EEG_RAW_T7")
+                    {
+                        eegt7 = item;
+                    }
+
+                    if (item[0] == "L POR X [px]")
+                    {
+                        LPORX = item;
+                    }
+
+                    if (item[0] == "L POR Y [px]")
+                    {
+                        LPORY = item;
+                    }
                 }
 
-                if (item[0] == "EEG_RAW_T7")
+                //time.RemoveRange(0, 2); // remove head line and first (useless data)
+                //eegt7.RemoveRange(0, 2);
+
+                //time.RemoveAt(time.Count-1); // remove last line (useless data)
+                //eegt7.RemoveAt(eegt7.Count-1);
+
+                for (int j = 0; j < eegt7.Count; j++)
                 {
-                    eegt7 = item;
+                    EEGChart.Series[0].Points.AddXY(time[j], eegt7[j]);
                 }
+
+                playButton.Enabled = true;
+                stopButton.Enabled = true;
+                pauseButton.Enabled = true;
+                rewindButton.Enabled = true;
+
+                selectCsvFileButton.Enabled = false;
+                selectMediaFileButton.Enabled = false;
+
+                startAnalysisButton.Enabled = false;
+
+                trackBar.Enabled = true;
             }
-
-            //time.RemoveRange(0, 2); // remove head line and first (useless data)
-            //eegt7.RemoveRange(0, 2);
-
-            //time.RemoveAt(time.Count-1); // remove last line (useless data)
-            //eegt7.RemoveAt(eegt7.Count-1);
-
-            for (int j = 0; j < eegt7.Count; j++)
+            catch (System.IO.IOException ex)
             {
-                EEGChart.Series[0].Points.AddXY(time[j], eegt7[j]);
+                MessageBox.Show(ex.Message);
             }
-
-            playButton.Enabled = true;
-            stopButton.Enabled = true;
-            pauseButton.Enabled = true;
-            rewindButton.Enabled = true;
-
-            selectCsvFileButton.Enabled = false;
-            selectMediaFileButton.Enabled = false;
-
-            startAnalysisButton.Enabled = false;
-
-            trackBar.Enabled = true;
         }
 
         private void playButton_Click(object sender, EventArgs e)
         {
-            //windowsMediaPlayer.Ctlcontrols.play();
+            windowsMediaPlayer.Ctlcontrols.play();
             videoPlayTimer.Enabled = true;
         }
 
@@ -197,12 +225,77 @@ namespace EEGETAnalysis
 
         private void videoPlayTimer_Tick(object sender, EventArgs e)
         {
-            int newTrackBarValue = (int)((windowsMediaPlayer.Ctlcontrols.currentPosition / mediaDuration)*100);
+            double currentVideoPositionInPercent = ((windowsMediaPlayer.Ctlcontrols.currentPosition / mediaDuration) * 100);
+
+            // protection, do not go higher then 100%
+            if(currentVideoPositionInPercent > 100)
+            {
+                currentVideoPositionInPercent = 100;
+            }
+
+            int newTrackBarValue = (int)currentVideoPositionInPercent;
 
             if (newTrackBarValue <= trackBar.Maximum)
             {
                 trackBar.Value = newTrackBarValue;
             }
+
+            int LPORXindex = (int)(LPORX.Count * (currentVideoPositionInPercent/100));
+            int LPORYindex = (int)(LPORY.Count * (currentVideoPositionInPercent/100));
+
+            // first row contains identifier, skip it
+            if(LPORXindex < 1)
+            {
+                LPORXindex = 1;
+            }
+
+            if(LPORYindex < 1)
+            {
+                LPORYindex = 1;
+            }
+
+            // on 100% it will be out of range, because counting index begins at 0 -> prevent
+            if(LPORXindex >= LPORX.Count)
+            {
+                LPORXindex = LPORX.Count - 1;
+            }
+
+            if (LPORYindex >= LPORY.Count)
+            {
+                LPORYindex = LPORY.Count - 1;
+            }
+
+            // get only the the value before the dot (for int)
+            var splitValues = LPORX[LPORXindex].Split('.');
+
+            int eyeX = Convert.ToInt32(splitValues[0]);
+
+            splitValues = LPORY[LPORYindex].Split('.');
+
+            int eyeY = Convert.ToInt32(splitValues[0]);
+
+            // draw point
+            Pen pen = new Pen(Color.Red, 2);
+            Brush brush = new SolidBrush(Color.Red);
+
+            Graphics g = windowsMediaPlayer.CreateGraphics();
+            g.DrawRectangle(pen, eyeX, eyeY, 5, 5);
+
+            g.DrawLine(pen, 0, 0, 2000, 2000);
+
+
+            //TransparentControl transparentImage = new TransparentControl();
+            //transparentImage.Height = 100;
+            //transparentImage.Width = 100;
+            //Image image = Image.FromFile(@"C:\Work\TKL\EEGETAnalysis\EEGETAnalysis\eye.png");
+            //transparentImage.Image = image;
+            ////this.Controls.Add(transparentImage);
+
+            //windowsMediaPlayer.Controls.Add(transparentImage);
+
+            //transparentImage.BringToFront();
+            //transparentImage.Left = 200;
+            //transparentImage.Top = 100;
         }
 
         private void windowsMediaPlayer_PlayStateChange(object sender, AxWMPLib._WMPOCXEvents_PlayStateChangeEvent e)
