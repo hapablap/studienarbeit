@@ -52,6 +52,7 @@ namespace EEGETAnalysis
             startAnalysisButton.Enabled = false;
             windowsMediaPlayer.uiMode = "none";
             windowsMediaPlayer.Ctlcontrols.stop();
+            windowsMediaPlayer.windowlessVideo = true;
         }
 
         private void enableStartAnalysisButtonIfPathsAreSet()

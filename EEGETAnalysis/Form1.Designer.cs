@@ -29,9 +29,9 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend5 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series5 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.EEGChart = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.windowsMediaPlayer = new AxWMPLib.AxWindowsMediaPlayer();
@@ -63,18 +63,18 @@
             // 
             this.EEGChart.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea5.Name = "ChartArea1";
-            this.EEGChart.ChartAreas.Add(chartArea5);
+            chartArea1.Name = "ChartArea1";
+            this.EEGChart.ChartAreas.Add(chartArea1);
             this.EEGChart.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            legend5.Name = "Legend1";
-            this.EEGChart.Legends.Add(legend5);
+            legend1.Name = "Legend1";
+            this.EEGChart.Legends.Add(legend1);
             this.EEGChart.Location = new System.Drawing.Point(12, 547);
             this.EEGChart.Name = "EEGChart";
-            series5.ChartArea = "ChartArea1";
-            series5.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            series5.Legend = "Legend1";
-            series5.Name = "Series1";
-            this.EEGChart.Series.Add(series5);
+            series1.ChartArea = "ChartArea1";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series1.Legend = "Legend1";
+            series1.Name = "Series1";
+            this.EEGChart.Series.Add(series1);
             this.EEGChart.Size = new System.Drawing.Size(843, 81);
             this.EEGChart.TabIndex = 0;
             this.EEGChart.Text = "EEGChart";
