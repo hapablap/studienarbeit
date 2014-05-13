@@ -42,11 +42,14 @@ namespace EEGETAnalysis.GUI
         List<string> LPORX = null;
         List<string> LPORY = null;
 
-        List<KeyValuePair<long, long>> valueList;
+        //public List<KeyValuePair<long, long>> valueList;
+        private ChartInput data;
 
         public MainWindow()
         {
+            data = new ChartInput();
             InitializeComponent();
+            this.DataContext = data;
         }
 
         private void enableStartAnalysisButtonIfPathsAreSet()
@@ -153,8 +156,6 @@ namespace EEGETAnalysis.GUI
                 CsvParser parser = new CsvParser(CsvFilePathTextBox.Text);
                 csvData = parser.Parse();
 
-                valueList = new List<KeyValuePair<long, long>>();
-
                 foreach (List<string> item in csvData)
                 {
                     if (item[0] == "Time")
@@ -186,10 +187,8 @@ namespace EEGETAnalysis.GUI
 
                 for (int j = 0; j < eegt7.Count; j++)
                 {
-                    valueList.Add(new KeyValuePair<long, long>(Convert.ToInt64(time[j]), Convert.ToInt64(eegt7[j].Substring(0, eegt7[j].Length - 3))));
+                    //this.data.Add(new KeyValuePair<long, long>(Convert.ToInt64(time[j]), Convert.ToInt64(eegt7[j].Substring(0, eegt7[j].Length - 3))));
                 }
-
-                lineChart.DataContext = valueList;
 
                 SetControlButtonsEnabled(true);
 

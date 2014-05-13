@@ -8,7 +8,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="100" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="80" />
+            <RowDefinition Height="180" />
             <RowDefinition Height="65" />
         </Grid.RowDefinitions>
         <GroupBox Grid.Row="0" Header="Input">
@@ -42,8 +42,8 @@
         </GroupBox>
         <Canvas x:Name="MediaCanvas" Grid.Row="1"></Canvas>
         <GroupBox Grid.Row="2" Header="EEG Data">
-            <chartingToolkit:Chart  Name="lineChart" Title="Line Series Demo" VerticalAlignment="Top" Margin="33,611,440,0" Height="254">
-                <chartingToolkit:LineSeries  DependentValuePath="Value" IndependentValuePath="Key" ItemsSource="{Binding}" IsSelectionEnabled="True"/>
+            <chartingToolkit:Chart Name="lineChart" VerticalAlignment="Top">
+                <chartingToolkit:LineSeries DependentValuePath="Value" IndependentValuePath="Key" ItemsSource="{Binding ValueList}" IsSelectionEnabled="True"/>
             </chartingToolkit:Chart>
         </GroupBox>
         <GroupBox Grid.Row="3" Header="Controls">
