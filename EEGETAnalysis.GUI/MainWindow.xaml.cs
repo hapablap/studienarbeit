@@ -22,34 +22,82 @@ namespace EEGETAnalysis.GUI
     /// </summary>
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// Timer is used to synchronize UI elements and eye tracking data to the video
+        /// </summary>
         DispatcherTimer timer;
 
+        /// <summary>
+        /// Media player object
+        /// </summary>
         MediaPlayer mp;
 
-        // Duration of current media
+        /// <summary>
+        /// Duration of current media
+        /// </summary>
         double mediaDuration = 0;
 
-        // BeGaze CSV data
+        /// <summary>
+        /// BeGaze CSV data
+        /// </summary>
         List<List<string>> csvData = null;
 
-        // timestamps
+        /// <summary>
+        /// timestamps
+        /// </summary>
         List<string> time = null;
 
-        // EEG data from T7
+        /// <summary>
+        /// EEG data from T7
+        /// </summary>
         List<string> eegt7 = null;
 
-        // eye tracking coordinates
+        /// <summary>
+        /// Eye tracking coordinates (X)
+        /// </summary>
         List<string> LPORX = null;
+
+        /// <summary>
+        /// Eye tracking coordinates (Y)
+        /// </summary>
         List<string> LPORY = null;
 
-        //public List<KeyValuePair<long, long>> valueList;
+        /// <summary>
+        /// Data for chart.
+        /// </summary>
         private ChartInput data;
+
+        /// <summary>
+        /// Video size in percent. Value is used to calculate video size on window resize.
+        /// </summary>
+        private double videoSizeInPercent = 100;
+
+        /// <summary>
+        /// The current video position in percent
+        /// </summary>
+        private double currentVideoPositionInPercent;
+
+        /// <summary>
+        /// Red point to show eye focus on canvas
+        /// </summary>
+        Ellipse eyePoint;
 
         public MainWindow()
         {
             data = new ChartInput();
             InitializeComponent();
             this.DataContext = data;
+
+            MediaCanvas.SizeChanged += MediaCanvas_SizeChanged;
+        }
+
+        void MediaCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (mp != null && mp.NaturalVideoHeight > 0)
+            {
+                videoSizeInPercent = (e.NewSize.Height / mp.NaturalVideoHeight);
+                MediaCanvas.Width = mp.NaturalVideoWidth * videoSizeInPercent;
+            }
         }
 
         private void enableStartAnalysisButtonIfPathsAreSet()
@@ -57,12 +105,10 @@ namespace EEGETAnalysis.GUI
             if (!String.IsNullOrEmpty(CsvFilePathTextBox.Text) && !String.IsNullOrEmpty(MediaFilePathTextBox.Text))
             {
                 ExecuteButton.IsEnabled = true;
-                SetControlButtonsEnabled(true);
             }
             else
             {
                 ExecuteButton.IsEnabled = false;
-                SetControlButtonsEnabled(false);
             }
         }
 
@@ -86,11 +132,60 @@ namespace EEGETAnalysis.GUI
             MediaFilePathTextBox.IsEnabled = false;
 
             SetControlButtonsEnabled(false);
+
+            eyePoint = new Ellipse();
+            eyePoint.Stroke = Brushes.Red;
+            eyePoint.StrokeThickness = 4;
+            MediaCanvas.Children.Add(eyePoint);
         }
 
         void timer_Tick(object sender, EventArgs e)
         {
             Slider.Value = mp.Position.TotalSeconds;
+
+            currentVideoPositionInPercent = mp.Position.Seconds / mediaDuration;
+            
+            // protection, do not go higher then 100%
+            if (currentVideoPositionInPercent > 100)
+            {
+                currentVideoPositionInPercent = 100;
+            }
+
+            int LPORXindex = (int)(LPORX.Count * (currentVideoPositionInPercent / 100));
+            int LPORYindex = (int)(LPORY.Count * (currentVideoPositionInPercent / 100));
+            
+            // first row contains identifier, skip it
+            if (LPORXindex < 1)
+            {
+                LPORXindex = 1;
+            }
+
+            if (LPORYindex < 1)
+            {
+                LPORYindex = 1;
+            }
+
+            // on 100% it will be out of range, because counting index begins at 0 -> prevent
+            if (LPORXindex >= LPORX.Count)
+            {
+                LPORXindex = LPORX.Count - 1;
+            }
+
+            if (LPORYindex >= LPORY.Count)
+            {
+                LPORYindex = LPORY.Count - 1;
+            }
+
+            // get only the the value before the dot (for int)
+            var splitValues = LPORX[LPORXindex].Split('.');
+
+            int eyeX = Convert.ToInt32(splitValues[0]);
+
+            splitValues = LPORY[LPORYindex].Split('.');
+
+            int eyeY = Convert.ToInt32(splitValues[0]);
+
+            eyePoint.Margin = new Thickness(eyeX * videoSizeInPercent, eyeY * videoSizeInPercent, 0, 0);
         }
 
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -206,7 +301,12 @@ namespace EEGETAnalysis.GUI
         void mp_MediaOpened(object sender, EventArgs e)
         {
             TimeSpan ts = mp.NaturalDuration.TimeSpan;
-            Slider.Maximum = ts.TotalSeconds;
+            mediaDuration = ts.TotalSeconds;
+            Slider.Maximum = mediaDuration;
+
+            videoSizeInPercent = (MediaCanvas.ActualHeight / mp.NaturalVideoHeight);
+
+            MediaCanvas.Width = mp.NaturalVideoWidth * videoSizeInPercent;
         }
 
         private void ResetButton_Click(object sender, RoutedEventArgs e)
