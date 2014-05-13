@@ -82,6 +82,26 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         Ellipse eyePoint;
 
+        /// <summary>
+        /// LPORX list index for eye tracking X data
+        /// </summary>
+        int LPORXindex;
+
+        /// <summary>
+        /// LPORY list index for eye tracking Y data
+        /// </summary>
+        int LPORYindex;
+
+        /// <summary>
+        /// Eye x coordinate
+        /// </summary>
+        double eyeX = 0;
+
+        /// <summary>
+        /// Eye y coordinate
+        /// </summary>
+        double eyeY = 0;
+
         public MainWindow()
         {
             data = new ChartInput();
@@ -91,6 +111,12 @@ namespace EEGETAnalysis.GUI
             MediaCanvas.SizeChanged += MediaCanvas_SizeChanged;
         }
 
+        /// <summary>
+        /// Calculate the canvas width by height to ensure correct video format
+        /// when window size is changed.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void MediaCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             if (mp != null && mp.NaturalVideoHeight > 0)
@@ -100,6 +126,9 @@ namespace EEGETAnalysis.GUI
             }
         }
 
+        /// <summary>
+        /// Enable the start analysis button only if input data is set
+        /// </summary>
         private void enableStartAnalysisButtonIfPathsAreSet()
         {
             if (!String.IsNullOrEmpty(CsvFilePathTextBox.Text) && !String.IsNullOrEmpty(MediaFilePathTextBox.Text))
@@ -112,6 +141,10 @@ namespace EEGETAnalysis.GUI
             }
         }
 
+        /// <summary>
+        /// Method to set all controls at the same time enabled / disabled
+        /// </summary>
+        /// <param name="status"></param>
         private void SetControlButtonsEnabled(bool status)
         {
             PlayButton.IsEnabled = status;
@@ -121,10 +154,16 @@ namespace EEGETAnalysis.GUI
             Slider.IsEnabled = status;
         }
 
+        /// <summary>
+        /// Window Loaded event: Set up timer, set controls disabled on startup
+        /// and prepare eye tracking point.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             timer = new DispatcherTimer();
-            timer.Interval = TimeSpan.FromMilliseconds(500);
+            timer.Interval = TimeSpan.FromMilliseconds(50);
             timer.Tick += timer_Tick;
 
             ExecuteButton.IsEnabled = false;
@@ -136,9 +175,19 @@ namespace EEGETAnalysis.GUI
             eyePoint = new Ellipse();
             eyePoint.Stroke = Brushes.Red;
             eyePoint.StrokeThickness = 4;
+            eyePoint.Width = 10;
+            eyePoint.Height = 10;
             MediaCanvas.Children.Add(eyePoint);
+
+            eyePoint.Visibility = Visibility.Hidden;
         }
 
+        /// <summary>
+        /// Timer tick: Get the eye tracking data depending on video position
+        /// and draw the eye point on this position.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void timer_Tick(object sender, EventArgs e)
         {
             Slider.Value = mp.Position.TotalSeconds;
@@ -151,8 +200,8 @@ namespace EEGETAnalysis.GUI
                 currentVideoPositionInPercent = 100;
             }
 
-            int LPORXindex = (int)(LPORX.Count * (currentVideoPositionInPercent / 100));
-            int LPORYindex = (int)(LPORY.Count * (currentVideoPositionInPercent / 100));
+            LPORXindex = (int)(LPORX.Count * currentVideoPositionInPercent);
+            LPORYindex = (int)(LPORY.Count * currentVideoPositionInPercent);
             
             // first row contains identifier, skip it
             if (LPORXindex < 1)
@@ -179,20 +228,50 @@ namespace EEGETAnalysis.GUI
             // get only the the value before the dot (for int)
             var splitValues = LPORX[LPORXindex].Split('.');
 
-            int eyeX = Convert.ToInt32(splitValues[0]);
+            eyeX = Convert.ToDouble(splitValues[0]) * videoSizeInPercent;
 
             splitValues = LPORY[LPORYindex].Split('.');
 
-            int eyeY = Convert.ToInt32(splitValues[0]);
+            eyeY = Convert.ToDouble(splitValues[0]) * videoSizeInPercent;
 
-            eyePoint.Margin = new Thickness(eyeX * videoSizeInPercent, eyeY * videoSizeInPercent, 0, 0);
+            if(eyeX < 0)
+            {
+                eyeX = eyePoint.ActualWidth;
+            }
+
+            if(eyeY < 0)
+            {
+                eyeY = eyePoint.ActualHeight;
+            }
+
+            if(eyeX > MediaCanvas.ActualWidth)
+            {
+                eyeX = MediaCanvas.ActualWidth - eyePoint.ActualWidth;
+            }
+
+            if(eyeY > MediaCanvas.ActualHeight)
+            {
+                eyeY = MediaCanvas.ActualHeight - eyePoint.ActualHeight;
+            }
+
+            eyePoint.Margin = new Thickness(eyeX, eyeY, 0, 0);
         }
 
+        /// <summary>
+        /// Move video position to slider position
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             mp.Position = TimeSpan.FromSeconds(Slider.Value);
         }
 
+        /// <summary>
+        /// Select CSV input file
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void SelectCsvFileButton_Click(object sender, RoutedEventArgs e)
         {
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
@@ -211,6 +290,11 @@ namespace EEGETAnalysis.GUI
             enableStartAnalysisButtonIfPathsAreSet();
         }
 
+        /// <summary>
+        /// Select media input file
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void SelectMediaFileButton_Click(object sender, RoutedEventArgs e)
         {
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
@@ -229,6 +313,11 @@ namespace EEGETAnalysis.GUI
             enableStartAnalysisButtonIfPathsAreSet();
         }
 
+        /// <summary>
+        /// Process / parse the CSV file, open the video, add data to chart, enable controls.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ExecuteButton_Click(object sender, RoutedEventArgs e)
         {
             mp = new MediaPlayer();
@@ -298,6 +387,11 @@ namespace EEGETAnalysis.GUI
             }
         }
 
+        /// <summary>
+        /// Get some video values when media is opened
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void mp_MediaOpened(object sender, EventArgs e)
         {
             TimeSpan ts = mp.NaturalDuration.TimeSpan;
@@ -314,24 +408,45 @@ namespace EEGETAnalysis.GUI
             
         }
 
+        /// <summary>
+        /// Play the video and start the timer
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void PlayButton_Click(object sender, RoutedEventArgs e)
         {
             mp.Play();
             timer.Start();
+            eyePoint.Visibility = Visibility.Visible;
         }
 
+        /// <summary>
+        /// Stop the video and stop the timer
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
             mp.Stop();
             timer.Stop();
         }
 
+        /// <summary>
+        /// Pause the video and stop the timer
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void PauseButton_Click(object sender, RoutedEventArgs e)
         {
             mp.Pause();
             timer.Stop();
         }
 
+        /// <summary>
+        /// Set video position to 0 (rewind)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void RewindButton_Click(object sender, RoutedEventArgs e)
         {
             mp.Position = new TimeSpan(0);
