@@ -83,14 +83,11 @@ namespace EEGETAnalysis.GUI
         Ellipse eyePoint;
 
         /// <summary>
-        /// LPORX list index for eye tracking X data
+        /// Current data list index depending on current video position.
+        /// This value is used to pick list values on the correct position
+        /// depending on the video position. It is calculted on the timer tick.
         /// </summary>
-        int LPORXindex;
-
-        /// <summary>
-        /// LPORY list index for eye tracking Y data
-        /// </summary>
-        int LPORYindex;
+        int currentDataIndex = 0;
 
         /// <summary>
         /// Eye x coordinate
@@ -101,6 +98,11 @@ namespace EEGETAnalysis.GUI
         /// Eye y coordinate
         /// </summary>
         double eyeY = 0;
+
+        /// <summary>
+        /// Indicates if the current video is playing
+        /// </summary>
+        bool videoIsPlaying = false;
 
         public MainWindow()
         {
@@ -171,6 +173,7 @@ namespace EEGETAnalysis.GUI
             MediaFilePathTextBox.IsEnabled = false;
 
             SetControlButtonsEnabled(false);
+            ResetButton.IsEnabled = false;
 
             eyePoint = new Ellipse();
             eyePoint.Stroke = Brushes.Red;
@@ -190,8 +193,11 @@ namespace EEGETAnalysis.GUI
         /// <param name="e"></param>
         void timer_Tick(object sender, EventArgs e)
         {
+            // Synchronize slider position with video
             Slider.Value = mp.Position.TotalSeconds;
 
+            // Calculate the current video position in percent. This value is used
+            // for different calculations
             currentVideoPositionInPercent = mp.Position.Seconds / mediaDuration;
             
             // protection, do not go higher then 100%
@@ -200,37 +206,28 @@ namespace EEGETAnalysis.GUI
                 currentVideoPositionInPercent = 100;
             }
 
-            LPORXindex = (int)(LPORX.Count * currentVideoPositionInPercent);
-            LPORYindex = (int)(LPORY.Count * currentVideoPositionInPercent);
-            
-            // first row contains identifier, skip it
-            if (LPORXindex < 1)
-            {
-                LPORXindex = 1;
-            }
+            currentDataIndex = (int)(LPORX.Count * currentVideoPositionInPercent);
 
-            if (LPORYindex < 1)
+            // first row contains identifier, skip it
+            if (currentDataIndex < 1)
             {
-                LPORYindex = 1;
+                currentDataIndex = 1;
             }
 
             // on 100% it will be out of range, because counting index begins at 0 -> prevent
-            if (LPORXindex >= LPORX.Count)
+            if (currentDataIndex >= LPORX.Count)
             {
-                LPORXindex = LPORX.Count - 1;
+                currentDataIndex = LPORX.Count - 1;
             }
 
-            if (LPORYindex >= LPORY.Count)
-            {
-                LPORYindex = LPORY.Count - 1;
-            }
+            // Eye tracking (BEGIN)
 
             // get only the the value before the dot (for int)
-            var splitValues = LPORX[LPORXindex].Split('.');
+            var splitValues = LPORX[currentDataIndex].Split('.');
 
             eyeX = Convert.ToDouble(splitValues[0]) * videoSizeInPercent;
 
-            splitValues = LPORY[LPORYindex].Split('.');
+            splitValues = LPORY[currentDataIndex].Split('.');
 
             eyeY = Convert.ToDouble(splitValues[0]) * videoSizeInPercent;
 
@@ -255,6 +252,11 @@ namespace EEGETAnalysis.GUI
             }
 
             eyePoint.Margin = new Thickness(eyeX, eyeY, 0, 0);
+            // Eye tracking (END)
+
+            // EEG data (BEGIN)
+            this.data.Add(new KeyValuePair<long, long>(mp.Position.Seconds, Convert.ToInt64(eegt7[currentDataIndex].Substring(0, eegt7[currentDataIndex].Length - 3))));
+            // EEG data (END)
         }
 
         /// <summary>
@@ -265,6 +267,11 @@ namespace EEGETAnalysis.GUI
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             mp.Position = TimeSpan.FromSeconds(Slider.Value);
+
+            //if (!videoIsPlaying)
+            //{
+            //    this.data.Clear();
+            //}
         }
 
         /// <summary>
@@ -333,8 +340,6 @@ namespace EEGETAnalysis.GUI
 
             MediaCanvas.Background = db;
 
-            //mediaDuration = Duration(mediaFilePath);
-
             try
             {
                 CsvParser parser = new CsvParser(CsvFilePathTextBox.Text);
@@ -369,10 +374,10 @@ namespace EEGETAnalysis.GUI
                 time.RemoveAt(time.Count - 1); // remove last line (useless data)
                 eegt7.RemoveAt(eegt7.Count - 1);
 
-                for (int j = 0; j < eegt7.Count; j++)
-                {
-                    //this.data.Add(new KeyValuePair<long, long>(Convert.ToInt64(time[j]), Convert.ToInt64(eegt7[j].Substring(0, eegt7[j].Length - 3))));
-                }
+                //for (int j = 0; j < eegt7.Count; j++)
+                //{
+                //    this.data.Add(new KeyValuePair<long, long>(Convert.ToInt64(time[j]), Convert.ToInt64(eegt7[j].Substring(0, eegt7[j].Length - 3))));
+                //}
 
                 SetControlButtonsEnabled(true);
 
@@ -380,6 +385,7 @@ namespace EEGETAnalysis.GUI
                 SelectMediaFileButton.IsEnabled = false;
 
                 ExecuteButton.IsEnabled = false;
+                ResetButton.IsEnabled = true;
             }
             catch (System.IO.IOException ex)
             {
@@ -403,9 +409,23 @@ namespace EEGETAnalysis.GUI
             MediaCanvas.Width = mp.NaturalVideoWidth * videoSizeInPercent;
         }
 
+        /// <summary>
+        /// Reset all data.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ResetButton_Click(object sender, RoutedEventArgs e)
         {
-            
+            mp.Close();
+            this.data.Clear();
+            Slider.Value = 0;
+            SetControlButtonsEnabled(false);
+            CsvFilePathTextBox.Text = null;
+            MediaFilePathTextBox.Text = null;
+            ResetButton.IsEnabled = false;
+            eyePoint.Visibility = Visibility.Hidden;
+            SelectCsvFileButton.IsEnabled = true;
+            SelectMediaFileButton.IsEnabled = true;
         }
 
         /// <summary>
@@ -418,6 +438,7 @@ namespace EEGETAnalysis.GUI
             mp.Play();
             timer.Start();
             eyePoint.Visibility = Visibility.Visible;
+            videoIsPlaying = true;
         }
 
         /// <summary>
@@ -429,6 +450,8 @@ namespace EEGETAnalysis.GUI
         {
             mp.Stop();
             timer.Stop();
+            this.data.Clear();
+            videoIsPlaying = false;
         }
 
         /// <summary>
@@ -440,6 +463,7 @@ namespace EEGETAnalysis.GUI
         {
             mp.Pause();
             timer.Stop();
+            videoIsPlaying = false;
         }
 
         /// <summary>
@@ -450,6 +474,7 @@ namespace EEGETAnalysis.GUI
         private void RewindButton_Click(object sender, RoutedEventArgs e)
         {
             mp.Position = new TimeSpan(0);
+            this.data.Clear();
         }
     }
 }

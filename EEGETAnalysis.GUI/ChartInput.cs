@@ -20,5 +20,10 @@ namespace EEGETAnalysis.GUI
         {
             ValueList.Add(data);
         }
+
+        public void Clear()
+        {
+            ValueList.Clear();
+        }
     }
 }
