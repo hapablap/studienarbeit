@@ -81,7 +81,7 @@ namespace EEGETAnalysis.Library
                         tmpMetaData = line.ToString().Substring(3);
 
                         // MetaData category is inside square brackets, check if current line is category
-                        // if not, 
+                        // if not, it is meta data
                         if (tmpMetaData[0] == '[' && tmpMetaData[tmpMetaData.Length - 1] == ']')
                         {
                             tmpCurrentMetaDataCategory = tmpMetaData.Substring(1, tmpMetaData.Length - 2);
@@ -93,7 +93,7 @@ namespace EEGETAnalysis.Library
                             // Try / catch to prevent exception in case there is no key / value pair (out of index on array)
                             try
                             {
-                                metaData.AddKeyValuePair(tmpCurrentMetaDataCategory, values[0], values[1]);
+                                metaData.AddKeyValuePair(tmpCurrentMetaDataCategory, values[0].Substring(0, values[0].Length-1), values[1]);
                             }
                             catch (Exception) { }
                         }
@@ -133,6 +133,11 @@ namespace EEGETAnalysis.Library
             }
 
             return parsedCsvContent;
+        }
+
+        public MetaDataDictionary GetMetaDataDictionary()
+        {
+            return metaData;
         }
     }
 }

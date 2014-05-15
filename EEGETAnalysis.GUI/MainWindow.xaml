@@ -42,9 +42,11 @@
         </GroupBox>
         <Canvas x:Name="MediaCanvas" Grid.Row="1"></Canvas>
         <GroupBox Grid.Row="2" Header="EEG Data">
-            <chartingToolkit:Chart Name="lineChart" VerticalAlignment="Top">
-                <chartingToolkit:LineSeries DependentValuePath="Value" IndependentValuePath="Key" ItemsSource="{Binding ValueList}" IsSelectionEnabled="True"/>
-            </chartingToolkit:Chart>
+            <Canvas x:Name="EEGDataCanvas">
+                <chartingToolkit:Chart Name="LineChart" VerticalAlignment="Stretch">
+                    <chartingToolkit:LineSeries DependentValuePath="Value" IndependentValuePath="Key" ItemsSource="{Binding ValueList}" x:Name="series"/>
+                </chartingToolkit:Chart>
+            </Canvas>
         </GroupBox>
         <GroupBox Grid.Row="3" Header="Controls">
             <Grid>

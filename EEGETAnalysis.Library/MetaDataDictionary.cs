@@ -39,17 +39,18 @@ namespace EEGETAnalysis.Library
 
         public string GetValue(string key)
         {
-            string returnValue = "";
-
-            foreach (Dictionary<string, string> item in ht)
+            foreach (Dictionary<string, string> items in ht.Values)
             {
-                if(item.TryGetValue(key, out returnValue))
+                foreach (KeyValuePair<string, string> item in items)
                 {
-                    break;
+                    if(item.Key.Equals(key))
+                    {
+                        return item.Value;
+                    }
                 }
             }
 
-            return returnValue;
+            return "";
         }
     }
 }

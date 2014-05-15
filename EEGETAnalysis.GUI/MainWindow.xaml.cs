@@ -14,6 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using EEGETAnalysis.Library;
 using System.Windows.Threading;
+using System.Windows.Controls.DataVisualization.Charting;
 
 namespace EEGETAnalysis.GUI
 {
@@ -45,7 +46,7 @@ namespace EEGETAnalysis.GUI
         /// <summary>
         /// timestamps
         /// </summary>
-        List<string> time = null;
+        List<double> time = null;
 
         /// <summary>
         /// EEG data from T7
@@ -82,6 +83,12 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         Ellipse eyePoint;
 
+        Line eegLine;
+
+        double eegLineNullPoint = 12;
+
+        double eegLineCurrentPosition = 0;
+
         /// <summary>
         /// Current data list index depending on current video position.
         /// This value is used to pick list values on the correct position
@@ -111,6 +118,13 @@ namespace EEGETAnalysis.GUI
             this.DataContext = data;
 
             MediaCanvas.SizeChanged += MediaCanvas_SizeChanged;
+            EEGDataCanvas.SizeChanged += EEGDataCanvas_SizeChanged;
+        }
+
+        void EEGDataCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            LineChart.Height = EEGDataCanvas.ActualHeight;
+            LineChart.Width = EEGDataCanvas.ActualWidth;
         }
 
         /// <summary>
@@ -183,6 +197,21 @@ namespace EEGETAnalysis.GUI
             MediaCanvas.Children.Add(eyePoint);
 
             eyePoint.Visibility = Visibility.Hidden;
+
+            eegLine = new Line();
+            eegLine.Stroke = Brushes.Red;
+            eegLine.StrokeThickness = 1;
+            eegLine.Height = 130;
+            eegLine.Width = 1000000;
+            eegLine.X1 = eegLineNullPoint;
+            eegLine.Y1 = 47;
+            eegLine.X2 = eegLineNullPoint;
+            eegLine.Y2 = 300;
+
+            EEGDataCanvas.Children.Add(eegLine);
+
+            Style dataPointStyle = GetNewDataPointStyle();
+            series.DataPointStyle = dataPointStyle;
         }
 
         /// <summary>
@@ -255,8 +284,16 @@ namespace EEGETAnalysis.GUI
             // Eye tracking (END)
 
             // EEG data (BEGIN)
-            this.data.Add(new KeyValuePair<long, long>(mp.Position.Seconds, Convert.ToInt64(eegt7[currentDataIndex].Substring(0, eegt7[currentDataIndex].Length - 3))));
+            //this.data.Add(new KeyValuePair<long, long>(mp.Position.Seconds, Convert.ToInt64(eegt7[currentDataIndex].Substring(0, eegt7[currentDataIndex].Length - 3))));
+            DrawEEGLine();
             // EEG data (END)
+        }
+
+        private void DrawEEGLine()
+        {
+            eegLineCurrentPosition = series.ActualWidth * currentVideoPositionInPercent;
+            eegLine.X1 = eegLineCurrentPosition + eegLineNullPoint;
+            eegLine.X2 = eegLineCurrentPosition + eegLineNullPoint;
         }
 
         /// <summary>
@@ -321,6 +358,28 @@ namespace EEGETAnalysis.GUI
         }
 
         /// <summary>
+        /// Disable dots on the line chart for better performance.
+        /// </summary>
+        /// <returns></returns>
+        private static Style GetNewDataPointStyle()
+        {
+            Color background = Color.FromRgb(0, 0, 0);
+            Style style = new Style(typeof(DataPoint));
+            Setter st1 = new Setter(DataPoint.BackgroundProperty, 
+                                        new SolidColorBrush(background));
+            Setter st2 = new Setter(DataPoint.BorderBrushProperty, 
+                                        new SolidColorBrush(Colors.White));
+            Setter st3 = new Setter(DataPoint.BorderThicknessProperty, new Thickness(0.1));
+
+            Setter st4 = new Setter(DataPoint.TemplateProperty, null);
+            style.Setters.Add(st1);
+            style.Setters.Add(st2);
+            style.Setters.Add(st3);
+            style.Setters.Add(st4);
+            return style;
+        }
+
+        /// <summary>
         /// Process / parse the CSV file, open the video, add data to chart, enable controls.
         /// </summary>
         /// <param name="sender"></param>
@@ -329,6 +388,7 @@ namespace EEGETAnalysis.GUI
         {
             mp = new MediaPlayer();
             mp.MediaOpened += mp_MediaOpened;
+            mp.MediaEnded += mp_MediaEnded;
 
             mp.Open(new Uri(MediaFilePathTextBox.Text));
 
@@ -345,11 +405,14 @@ namespace EEGETAnalysis.GUI
                 CsvParser parser = new CsvParser(CsvFilePathTextBox.Text);
                 csvData = parser.Parse();
 
+                List<string> timeTemp = new List<string>();
+                time = new List<double>();
+
                 foreach (List<string> item in csvData)
                 {
                     if (item[0] == "Time")
                     {
-                        time = item;
+                        timeTemp = item;
                     }
 
                     if (item[0] == "EEG_RAW_T7")
@@ -368,16 +431,27 @@ namespace EEGETAnalysis.GUI
                     }
                 }
 
-                time.RemoveRange(0, 2); // remove head line and first (useless data)
-                eegt7.RemoveRange(0, 2);
+                if (timeTemp.Count > 0)
+                {
+                    timeTemp.RemoveRange(0, 2); // remove head line and first (useless data)
+                    eegt7.RemoveRange(0, 2);
 
-                time.RemoveAt(time.Count - 1); // remove last line (useless data)
-                eegt7.RemoveAt(eegt7.Count - 1);
+                    timeTemp.RemoveAt(timeTemp.Count - 1); // remove last line (useless data)
+                    eegt7.RemoveAt(eegt7.Count - 1);
 
-                //for (int j = 0; j < eegt7.Count; j++)
-                //{
-                //    this.data.Add(new KeyValuePair<long, long>(Convert.ToInt64(time[j]), Convert.ToInt64(eegt7[j].Substring(0, eegt7[j].Length - 3))));
-                //}
+                    double sampleRate = Convert.ToDouble(parser.GetMetaDataDictionary().GetValue("Sample Rate"));
+
+                    for (int i = 0; i < timeTemp.Count; i++)
+                    {
+                        //time.Add(i * (1 / sampleRate));
+                        time.Add(Convert.ToDouble(timeTemp[i]));
+                    }
+
+                    for (int j = 0; j < eegt7.Count; j = j + 10)
+                    {
+                        this.data.Add(new KeyValuePair<long, long>(Convert.ToInt64(time[j]), Convert.ToInt64(eegt7[j].Substring(0, eegt7[j].Length - 3))));
+                    }
+                }
 
                 SetControlButtonsEnabled(true);
 
@@ -386,11 +460,21 @@ namespace EEGETAnalysis.GUI
 
                 ExecuteButton.IsEnabled = false;
                 ResetButton.IsEnabled = true;
+
+                Point relativeLocation = series.TranslatePoint(new Point(0, 0), LineChart);
+                eegLineNullPoint = relativeLocation.Y;
+                DrawEEGLine();
             }
             catch (System.IO.IOException ex)
             {
                 MessageBox.Show(ex.Message);
             }
+        }
+
+        void mp_MediaEnded(object sender, EventArgs e)
+        {
+            mp.Stop();
+            mp.Position = TimeSpan.FromSeconds(0);
         }
 
         /// <summary>
@@ -450,8 +534,8 @@ namespace EEGETAnalysis.GUI
         {
             mp.Stop();
             timer.Stop();
-            this.data.Clear();
             videoIsPlaying = false;
+            PlayButton.IsEnabled = true;
         }
 
         /// <summary>
@@ -474,7 +558,7 @@ namespace EEGETAnalysis.GUI
         private void RewindButton_Click(object sender, RoutedEventArgs e)
         {
             mp.Position = new TimeSpan(0);
-            this.data.Clear();
+            PlayButton.IsEnabled = true;
         }
     }
 }
