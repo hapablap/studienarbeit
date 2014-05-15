@@ -77,7 +77,7 @@ namespace EEGETAnalysis.GUI
         /// <summary>
         /// The current video position in percent
         /// </summary>
-        private double currentVideoPositionInPercent;
+        private double currentVideoPositionInPercent = 0;
 
         /// <summary>
         /// Red point to show eye focus on canvas
