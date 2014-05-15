@@ -9,14 +9,14 @@ namespace EEGETAnalysis.GUI
 {
     public class ChartInput
     {
-        public ObservableCollection<KeyValuePair<long, long>> ValueList { get; private set; }
+        public ObservableCollection<KeyValuePair<double, double>> ValueList { get; private set; }
 
         public ChartInput()
         {
-            this.ValueList = new ObservableCollection<KeyValuePair<long, long>>();
+            this.ValueList = new ObservableCollection<KeyValuePair<double, double>>();
         }
 
-        public void Add(KeyValuePair<long, long> data)
+        public void Add(KeyValuePair<double, double> data)
         {
             ValueList.Add(data);
         }

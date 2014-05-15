@@ -64,6 +64,8 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         List<string> LPORY = null;
 
+        List<Sample> samples = null;
+
         /// <summary>
         /// Data for chart.
         /// </summary>
@@ -430,25 +432,14 @@ namespace EEGETAnalysis.GUI
                 int sampleRate = Convert.ToInt32(parser.GetMetaDataDictionary().GetValue("Sample Rate"));
 
                 Sampler sampler = new Sampler(csvData, sampleRate);
-
-
+                samples = sampler.FindAllGoodSamples();
+                
                 if (timeTemp.Count > 0)
                 {
-                    timeTemp.RemoveRange(0, 2); // remove head line and first (useless data)
-                    eegt7.RemoveRange(0, 2);
-
-                    timeTemp.RemoveAt(timeTemp.Count - 1); // remove last line (useless data)
-                    eegt7.RemoveAt(eegt7.Count - 1);
-
-                    for (int i = 0; i < timeTemp.Count; i++)
+                    // @TODO: Andere Lösung finden
+                    for (int i = 0; i < samples.Count; i = i + 10)
                     {
-                        //time.Add(i * (1 / sampleRate));
-                        time.Add(Convert.ToDouble(timeTemp[i]));
-                    }
-
-                    for (int j = 0; j < eegt7.Count; j = j + 10)
-                    {
-                        this.data.Add(new KeyValuePair<long, long>(Convert.ToInt64(time[j]), Convert.ToInt64(eegt7[j].Substring(0, eegt7[j].Length - 3))));
+                        this.data.Add(new KeyValuePair<double, double>(samples[i].timestamp, samples[i].T7));
                     }
                 }
 

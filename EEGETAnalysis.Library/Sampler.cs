@@ -71,10 +71,10 @@ namespace EEGETAnalysis.Library
             List<String> row = csvData[i];
             Sample sample = new Sample();
             sample.timestamp = Convert.ToInt64(row[timestampPosition]);
-            sample.T7 = Convert.ToInt64(row[t7ColumnNo]);
-            sample.T8 = Convert.ToInt64(row[t8ColumnNo]);
-            sample.eyeX = Convert.ToDouble(row[eyeXColumnNo]);
-            sample.eyeY = Convert.ToDouble(row[eyeYColumnNo]);
+            sample.T7 = Convert.ToDouble(row[t7ColumnNo], System.Globalization.CultureInfo.InvariantCulture);
+            sample.T8 = Convert.ToDouble(row[t8ColumnNo], System.Globalization.CultureInfo.InvariantCulture);
+            sample.eyeX = Convert.ToDouble(row[eyeXColumnNo], System.Globalization.CultureInfo.InvariantCulture);
+            sample.eyeY = Convert.ToDouble(row[eyeYColumnNo], System.Globalization.CultureInfo.InvariantCulture);
 
             return sample;
         }

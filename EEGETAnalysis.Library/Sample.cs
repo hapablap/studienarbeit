@@ -11,7 +11,7 @@ namespace EEGETAnalysis.Library
         public long timestamp;
         public double eyeX;
         public double eyeY;
-        public long T7;
-        public long T8;
+        public double T7;
+        public double T8;
     }
 }

@@ -101,6 +101,18 @@ namespace EEGETAnalysis.Library
                 }
                 else
                 {
+
+
+
+                    var row = line.Split(seperator);
+                    parsedCsvContent.Add(row.ToList());
+
+
+
+
+
+                    /*
+
                     var values = line.Split(seperator);
 
                     // first row contains the identifiers, it gets a special behaviour
@@ -117,6 +129,7 @@ namespace EEGETAnalysis.Library
                     }
                     else
                     {
+
                         // values will be assigned to the corresponding identifier by index
                         loopCount = csvColumnCount;
                         if(values.Count() < csvColumnCount)
@@ -129,6 +142,8 @@ namespace EEGETAnalysis.Library
                             parsedCsvContent[i].Add(values[i]);
                         }
                     }
+                     * 
+                     * */
                 }
             }
 
