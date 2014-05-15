@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace EEGETAnalysis.Library
 {
-    class Sampler
+    public class Sampler
     {
-
         List<List<String>> csvData;
         int sampleRate;
 
@@ -23,7 +22,6 @@ namespace EEGETAnalysis.Library
             this.csvData = csvData;
             this.sampleRate = sampleRate;
             
-
             // Find column numbers of relevant data
             foreach (List<String> row in csvData)
             {
@@ -39,9 +37,7 @@ namespace EEGETAnalysis.Library
                 }
                 if (i > 0) break;
             }
-
         }
-
 
         public Sample findNextGoodSample(int i)
         {
@@ -59,11 +55,9 @@ namespace EEGETAnalysis.Library
                     bestSample = anotherSample;
                     difference = anotherDifference;
                 }
-
             }
 
             return bestSample;
-
         }
 
         public Sample getSample(int i)
@@ -78,7 +72,5 @@ namespace EEGETAnalysis.Library
 
             return sample;
         }
-
-
     }
 }

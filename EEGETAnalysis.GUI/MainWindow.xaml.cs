@@ -426,6 +426,11 @@ namespace EEGETAnalysis.GUI
                         LPORY = item;
                     }
                 }
+                
+                int sampleRate = Convert.ToInt32(parser.GetMetaDataDictionary().GetValue("Sample Rate"));
+
+                Sampler sampler = new Sampler(csvData, sampleRate);
+
 
                 if (timeTemp.Count > 0)
                 {
@@ -434,8 +439,6 @@ namespace EEGETAnalysis.GUI
 
                     timeTemp.RemoveAt(timeTemp.Count - 1); // remove last line (useless data)
                     eegt7.RemoveAt(eegt7.Count - 1);
-
-                    double sampleRate = Convert.ToDouble(parser.GetMetaDataDictionary().GetValue("Sample Rate"));
 
                     for (int i = 0; i < timeTemp.Count; i++)
                     {

@@ -6,14 +6,12 @@ using System.Threading.Tasks;
 
 namespace EEGETAnalysis.Library
 {
-    class Sample
+    public class Sample
     {
-
         public long timestamp;
         public double eyeX;
         public double eyeY;
         public long T7;
         public long T8;
-
     }
 }
