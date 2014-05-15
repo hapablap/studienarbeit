@@ -10,6 +10,7 @@ namespace EEGETAnalysis.Library
     {
 
         List<List<String>> csvData;
+        int sampleRate;
 
         int timestampPosition = 0;
         int t7ColumnNo = 0;
@@ -17,9 +18,10 @@ namespace EEGETAnalysis.Library
         int eyeXColumnNo = 0;
         int eyeYColumnNo = 0;
 
-        public Sampler(List<List<String>> csvData)
+        public Sampler(List<List<String>> csvData, int sampleRate)
         {
             this.csvData = csvData;
+            this.sampleRate = sampleRate;
             
 
             // Find column numbers of relevant data
@@ -51,7 +53,7 @@ namespace EEGETAnalysis.Library
             for (int j = 1; j < 4; j++)
             {
                 Sample anotherSample = getSample(i + j);
-                long anotherDifference = Math.Abs(anotherSample.timestamp - thisSample.timestamp - 16666);
+                long anotherDifference = Math.Abs(anotherSample.timestamp - thisSample.timestamp - (1 / sampleRate * 1000000));
                 if (anotherDifference < difference)
                 {
                     bestSample = anotherSample;
