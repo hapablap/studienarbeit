@@ -37,18 +37,24 @@ namespace EEGETAnalysis.Library
                 }
                 if (i > 0) break;
             }
+
+            csvData.RemoveRange(0, 2);
+            csvData.RemoveAt(csvData.Count - 1);
         }
 
-        public Sample findNextGoodSample(int i)
+        public Sample FindNextGoodSample(int i)
         {
-            Sample thisSample = getSample(i);
+
+            if (i > csvData.Count - 4) return null;
+
+            Sample thisSample = GetSample(i);
 
             Sample bestSample = null;
             long difference = thisSample.timestamp;
 
             for (int j = 1; j < 4; j++)
             {
-                Sample anotherSample = getSample(i + j);
+                Sample anotherSample = GetSample(i + j);
                 long anotherDifference = Math.Abs(anotherSample.timestamp - thisSample.timestamp - (1 / sampleRate * 1000000));
                 if (anotherDifference < difference)
                 {
@@ -60,7 +66,7 @@ namespace EEGETAnalysis.Library
             return bestSample;
         }
 
-        public Sample getSample(int i)
+        public Sample GetSample(int i)
         {
             List<String> row = csvData[i];
             Sample sample = new Sample();
@@ -72,5 +78,20 @@ namespace EEGETAnalysis.Library
 
             return sample;
         }
+
+        public List<Sample> FindAllGoodSamples()
+        {
+            List<Sample> sampleList = new List<Sample>();
+            sampleList.Add(GetSample(0));
+            int i = 0;
+            Sample sample;
+            while ((sample = FindNextGoodSample(i)) != null)
+            {
+                sampleList.Add(sample);
+                i++;
+            }
+            return sampleList;
+        }
+
     }
 }
