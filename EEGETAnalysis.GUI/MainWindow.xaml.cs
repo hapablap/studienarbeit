@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using EEGETAnalysis.Library;
 using System.Windows.Threading;
 using System.Windows.Controls.DataVisualization.Charting;
+using System.Threading;
 
 namespace EEGETAnalysis.GUI
 {
@@ -106,11 +107,6 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         double eyeY = 0;
 
-        /// <summary>
-        /// Indicates if the current video is playing
-        /// </summary>
-        bool videoIsPlaying = false;
-
         public MainWindow()
         {
             data = new ChartInput();
@@ -119,6 +115,9 @@ namespace EEGETAnalysis.GUI
 
             MediaCanvas.SizeChanged += MediaCanvas_SizeChanged;
             EEGDataCanvas.SizeChanged += EEGDataCanvas_SizeChanged;
+
+            Worker wObject = new Worker();
+            //Thread t = new Thread()
         }
 
         void EEGDataCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -522,7 +521,6 @@ namespace EEGETAnalysis.GUI
             mp.Play();
             timer.Start();
             eyePoint.Visibility = Visibility.Visible;
-            videoIsPlaying = true;
         }
 
         /// <summary>
@@ -534,7 +532,6 @@ namespace EEGETAnalysis.GUI
         {
             mp.Stop();
             timer.Stop();
-            videoIsPlaying = false;
             PlayButton.IsEnabled = true;
         }
 
@@ -547,7 +544,6 @@ namespace EEGETAnalysis.GUI
         {
             mp.Pause();
             timer.Stop();
-            videoIsPlaying = false;
         }
 
         /// <summary>
