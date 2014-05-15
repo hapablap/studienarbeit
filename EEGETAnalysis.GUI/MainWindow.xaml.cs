@@ -115,9 +115,6 @@ namespace EEGETAnalysis.GUI
 
             MediaCanvas.SizeChanged += MediaCanvas_SizeChanged;
             EEGDataCanvas.SizeChanged += EEGDataCanvas_SizeChanged;
-
-            Worker wObject = new Worker();
-            //Thread t = new Thread()
         }
 
         void EEGDataCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
