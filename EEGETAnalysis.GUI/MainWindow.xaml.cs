@@ -45,25 +45,8 @@ namespace EEGETAnalysis.GUI
         List<List<string>> csvData = null;
 
         /// <summary>
-        /// timestamps
+        /// Sample data from CSV
         /// </summary>
-        List<double> time = null;
-
-        /// <summary>
-        /// EEG data from T7
-        /// </summary>
-        List<string> eegt7 = null;
-
-        /// <summary>
-        /// Eye tracking coordinates (X)
-        /// </summary>
-        List<string> LPORX = null;
-
-        /// <summary>
-        /// Eye tracking coordinates (Y)
-        /// </summary>
-        List<string> LPORY = null;
-
         List<Sample> samples = null;
 
         /// <summary>
@@ -233,7 +216,7 @@ namespace EEGETAnalysis.GUI
                 currentVideoPositionInPercent = 100;
             }
 
-            currentDataIndex = (int)(LPORX.Count * currentVideoPositionInPercent);
+            currentDataIndex = (int)(samples.Count * currentVideoPositionInPercent);
 
             // first row contains identifier, skip it
             if (currentDataIndex < 1)
@@ -242,21 +225,14 @@ namespace EEGETAnalysis.GUI
             }
 
             // on 100% it will be out of range, because counting index begins at 0 -> prevent
-            if (currentDataIndex >= LPORX.Count)
+            if (currentDataIndex >= samples.Count)
             {
-                currentDataIndex = LPORX.Count - 1;
+                currentDataIndex = samples.Count - 1;
             }
 
             // Eye tracking (BEGIN)
-
-            // get only the the value before the dot (for int)
-            var splitValues = LPORX[currentDataIndex].Split('.');
-
-            eyeX = Convert.ToDouble(splitValues[0]) * videoSizeInPercent;
-
-            splitValues = LPORY[currentDataIndex].Split('.');
-
-            eyeY = Convert.ToDouble(splitValues[0]) * videoSizeInPercent;
+            eyeX = samples[currentDataIndex].eyeX * videoSizeInPercent;
+            eyeY = samples[currentDataIndex].eyeY * videoSizeInPercent;
 
             if(eyeX < 0)
             {
@@ -403,38 +379,12 @@ namespace EEGETAnalysis.GUI
                 CsvParser parser = new CsvParser(CsvFilePathTextBox.Text);
                 csvData = parser.Parse();
 
-                List<string> timeTemp = new List<string>();
-                time = new List<double>();
-
-                foreach (List<string> item in csvData)
-                {
-                    if (item[0] == "Time")
-                    {
-                        timeTemp = item;
-                    }
-
-                    if (item[0] == "EEG_RAW_T7")
-                    {
-                        eegt7 = item;
-                    }
-
-                    if (item[0] == "L POR X [px]")
-                    {
-                        LPORX = item;
-                    }
-
-                    if (item[0] == "L POR Y [px]")
-                    {
-                        LPORY = item;
-                    }
-                }
-                
                 int sampleRate = Convert.ToInt32(parser.GetMetaDataDictionary().GetValue("Sample Rate"));
 
                 Sampler sampler = new Sampler(csvData, sampleRate);
                 samples = sampler.FindAllGoodSamples();
-                
-                if (timeTemp.Count > 0)
+
+                if (samples.Count > 0)
                 {
                     // @TODO: Andere Lösung finden
                     for (int i = 0; i < samples.Count; i = i + 10)
@@ -451,8 +401,10 @@ namespace EEGETAnalysis.GUI
                 ExecuteButton.IsEnabled = false;
                 ResetButton.IsEnabled = true;
 
+                // Get the charts distance to the canvas border to draw it on the right place
                 Point relativeLocation = series.TranslatePoint(new Point(0, 0), LineChart);
                 eegLineNullPoint = relativeLocation.Y;
+
                 DrawEEGLine();
             }
             catch (System.IO.IOException ex)
