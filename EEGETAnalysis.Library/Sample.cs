@@ -8,6 +8,7 @@ namespace EEGETAnalysis.Library
 {
     public class Sample
     {
+        public int index;
         public long timestamp;
         public double eyeX;
         public double eyeY;

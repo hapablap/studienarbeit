@@ -42,34 +42,49 @@ namespace EEGETAnalysis.Library
             csvData.RemoveAt(csvData.Count - 1);
         }
 
-        public Sample FindNextGoodSample(int i)
+        
+        public Sample FindNextGoodSample(Sample startSample)
         {
 
-            if (i > csvData.Count - 4) return null;
+            int i = startSample.index;
 
-            Sample thisSample = GetSample(i);
-
+            long timestampWanted = (long) (startSample.timestamp + (1000000 / sampleRate));
+            long bestDifferenceToWantedTimestamp = startSample.timestamp;
             Sample bestSample = null;
-            long difference = thisSample.timestamp;
 
-            for (int j = 1; j < 4; j++)
+            // Manchmal häufen sich Timestamps mit demselben Wert in der Datei. Diese überspringen
+            Sample nextSample = GetSample(i + 1);
+            while (nextSample != null && nextSample.timestamp == startSample.timestamp)
             {
-                Sample anotherSample = GetSample(i + j);
-                long anotherDifference = Math.Abs(anotherSample.timestamp - thisSample.timestamp - (1 / sampleRate * 1000000));
-                if (anotherDifference < difference)
+                i++;
+                nextSample = GetSample(i + 1);
+            }
+
+            for (int j = i + 1; j < (i + 5); j++)
+            {
+                nextSample = GetSample(j);
+                if (nextSample == null) return null;
+                long differenceToWantedTimestamp = Math.Abs(timestampWanted - nextSample.timestamp);
+
+                if (differenceToWantedTimestamp < bestDifferenceToWantedTimestamp)
                 {
-                    bestSample = anotherSample;
-                    difference = anotherDifference;
+                    bestDifferenceToWantedTimestamp = differenceToWantedTimestamp;
+                    bestSample = nextSample;
                 }
             }
 
+            Console.WriteLine(nextSample.timestamp);
+
             return bestSample;
+
         }
 
         public Sample GetSample(int i)
         {
+            if (i >= csvData.Count) return null;
             List<String> row = csvData[i];
             Sample sample = new Sample();
+            sample.index = i;
             sample.timestamp = Convert.ToInt64(row[timestampPosition]);
             sample.T7 = Convert.ToDouble(row[t7ColumnNo], System.Globalization.CultureInfo.InvariantCulture);
             sample.T8 = Convert.ToDouble(row[t8ColumnNo], System.Globalization.CultureInfo.InvariantCulture);
@@ -82,13 +97,11 @@ namespace EEGETAnalysis.Library
         public List<Sample> FindAllGoodSamples()
         {
             List<Sample> sampleList = new List<Sample>();
-            sampleList.Add(GetSample(0));
-            int i = 0;
-            Sample sample;
-            while ((sample = FindNextGoodSample(i)) != null)
+            Sample sample = GetSample(0);
+            sampleList.Add(sample);
+            while ((sample = FindNextGoodSample(sample)) != null)
             {
                 sampleList.Add(sample);
-                i++;
             }
             return sampleList;
         }
