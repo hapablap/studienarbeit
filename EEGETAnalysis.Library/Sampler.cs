@@ -52,7 +52,7 @@ namespace EEGETAnalysis.Library
             long bestDifferenceToWantedTimestamp = startSample.timestamp;
             Sample bestSample = null;
 
-            // Manchmal häufen sich Timestamps mit demselben Wert in der Datei. Diese überspringen
+            // Überspringe aufeinanderfolgende Timestamps mit demselben Wert. Manchmal häufen die sich.
             Sample nextSample = GetSample(i + 1);
             while (nextSample != null && nextSample.timestamp == startSample.timestamp)
             {
@@ -60,6 +60,7 @@ namespace EEGETAnalysis.Library
                 nextSample = GetSample(i + 1);
             }
 
+            // Suche den nächsten Timestamp, der (entsprechend der angegebenen Sample-Rate) dem erwarteten Wert am nächsten kommt
             for (int j = i + 1; j < (i + 5); j++)
             {
                 nextSample = GetSample(j);
@@ -72,8 +73,6 @@ namespace EEGETAnalysis.Library
                     bestSample = nextSample;
                 }
             }
-
-            Console.WriteLine(nextSample.timestamp);
 
             return bestSample;
 
