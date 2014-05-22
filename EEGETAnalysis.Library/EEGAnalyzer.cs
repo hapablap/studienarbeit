@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EEGETAnalysis.Library
 {
-    class EEGAnalyzer
+    public class EEGAnalyzer
     {
 
         Waveform waveform;
