@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BasicDSP;
 
 namespace EEGETAnalysis.Library
 {
@@ -104,6 +105,22 @@ namespace EEGETAnalysis.Library
             }
             return sampleList;
         }
+
+
+        public Waveform GetEEGWaveform(double sampleRate)
+        {
+            List<Sample> samples = FindAllGoodSamples();
+
+            Waveform signal = new Waveform(samples.Count, sampleRate);
+            foreach (Sample sample in samples)
+            {
+                signal.Add(sample.T7);
+            }
+
+            //TODO: continue here
+            return null;
+        }
+
 
     }
 }

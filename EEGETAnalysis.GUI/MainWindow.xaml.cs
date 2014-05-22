@@ -387,7 +387,7 @@ namespace EEGETAnalysis.GUI
                 if (samples.Count > 0)
                 {
                     // @TODO: Andere Lösung finden
-                    for (int i = 0; i < samples.Count; i = i + 10)
+                    for (int i = 0; i < samples.Count; i = i++)
                     {
                         this.data.Add(new KeyValuePair<double, double>(samples[i].timestamp, samples[i].T7));
                     }
