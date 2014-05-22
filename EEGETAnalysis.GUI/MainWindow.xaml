@@ -1,7 +1,6 @@
 ﻿<Window x:Class="EEGETAnalysis.GUI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:chartingToolkit="clr-namespace:System.Windows.Controls.DataVisualization.Charting;assembly=System.Windows.Controls.DataVisualization.Toolkit"
         Loaded="Window_Loaded"
         Title="EEGET Analysis">
     <Grid>
@@ -42,11 +41,12 @@
         </GroupBox>
         <Canvas x:Name="MediaCanvas" Grid.Row="1"></Canvas>
         <GroupBox Grid.Row="2" Header="EEG Data">
-            <Canvas x:Name="EEGDataCanvas">
-                <chartingToolkit:Chart Name="LineChart" VerticalAlignment="Stretch">
+            <Grid Name="EEGGrid"></Grid>
+            <!--<Canvas x:Name="EEGDataCanvas">
+                --><!--<chartingToolkit:Chart Name="LineChart" VerticalAlignment="Stretch">
                     <chartingToolkit:LineSeries DependentValuePath="Value" IndependentValuePath="Key" ItemsSource="{Binding ValueList}" x:Name="series"/>
-                </chartingToolkit:Chart>
-            </Canvas>
+                </chartingToolkit:Chart>--><!--
+            </Canvas>-->
         </GroupBox>
         <GroupBox Grid.Row="3" Header="Controls">
             <Grid>
