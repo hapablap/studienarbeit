@@ -106,12 +106,11 @@ namespace EEGETAnalysis.Library
             return sampleList;
         }
 
-
-        public Waveform GetEEGWaveform(double sampleRate, int mode)
+        public Waveform GetEEGWaveform(int mode)
         {
             List<Sample> samples = FindAllGoodSamples();
 
-            Waveform signal = new Waveform(samples.Count, sampleRate);
+            Waveform signal = new Waveform(0, sampleRate);
             foreach (Sample sample in samples)
             {
                 if (mode == 1)
@@ -127,14 +126,14 @@ namespace EEGETAnalysis.Library
             return signal;
         }
 
-        public Waveform GetEEGWaveformT7(double sampleRate)
+        public Waveform GetEEGWaveformT7()
         {
-            return GetEEGWaveform(sampleRate, 1);
+            return GetEEGWaveform(1);
         }
 
-        public Waveform GetEEGWaveformT8(double sampleRate)
+        public Waveform GetEEGWaveformT8()
         {
-            return GetEEGWaveform(sampleRate, 2);
+            return GetEEGWaveform(2);
         }
 
     }

@@ -50,11 +50,6 @@ namespace EEGETAnalysis.GUI
         List<Sample> samples = null;
 
         /// <summary>
-        /// Data for chart.
-        /// </summary>
-        private ChartInput data;
-
-        /// <summary>
         /// Video size in percent. Value is used to calculate video size on window resize.
         /// </summary>
         private double videoSizeInPercent = 100;
@@ -92,12 +87,11 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         double eyeY = 0;
 
+        BasicDSP.Graph graph;
+
         public MainWindow()
         {
-            data = new ChartInput();
             InitializeComponent();
-            this.DataContext = data;
-
             MediaCanvas.SizeChanged += MediaCanvas_SizeChanged;
         }
 
@@ -184,10 +178,12 @@ namespace EEGETAnalysis.GUI
 
             System.Windows.Forms.Integration.WindowsFormsHost host = new System.Windows.Forms.Integration.WindowsFormsHost();
             ZedGraph.ZedGraphControl zedGraph = new ZedGraph.ZedGraphControl();
+            zedGraph.IsEnableZoom = false;
             host.Child = zedGraph;
             EEGGrid.Children.Add(host);
 
-            zedGraph.BringToFront();
+            graph = new BasicDSP.Graph(zedGraph.CreateGraphics(), zedGraph);
+            
         }
 
         /// <summary>
@@ -352,15 +348,6 @@ namespace EEGETAnalysis.GUI
                 Sampler sampler = new Sampler(csvData, sampleRate);
                 samples = sampler.FindAllGoodSamples();
 
-                if (samples.Count > 0)
-                {
-                    // @TODO: Andere Lösung finden
-                    for (int i = 0; i < samples.Count; i = i++)
-                    {
-                        this.data.Add(new KeyValuePair<double, double>(samples[i].timestamp, samples[i].T7));
-                    }
-                }
-
                 SetControlButtonsEnabled(true);
 
                 SelectCsvFileButton.IsEnabled = false;
@@ -374,6 +361,10 @@ namespace EEGETAnalysis.GUI
                 //eegLineNullPoint = relativeLocation.Y;
 
                 //DrawEEGLine();
+                BasicDSP.Waveform waveformT8 = sampler.GetEEGWaveformT8();
+                graph.PlotClear(1);
+                graph.PlotWaveform(1, ref waveformT8, "T8");
+                
             }
             catch (System.IO.IOException ex)
             {
@@ -411,7 +402,7 @@ namespace EEGETAnalysis.GUI
         private void ResetButton_Click(object sender, RoutedEventArgs e)
         {
             mp.Close();
-            this.data.Clear();
+            graph.PlotClear(1);
             Slider.Value = 0;
             SetControlButtonsEnabled(false);
             CsvFilePathTextBox.Text = null;
