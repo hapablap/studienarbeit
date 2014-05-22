@@ -50,11 +50,6 @@ namespace EEGETAnalysis.GUI
         List<Sample> samples = null;
 
         /// <summary>
-        /// Data for chart.
-        /// </summary>
-        private ChartInput data;
-
-        /// <summary>
         /// Video size in percent. Value is used to calculate video size on window resize.
         /// </summary>
         private double videoSizeInPercent = 100;
@@ -73,7 +68,7 @@ namespace EEGETAnalysis.GUI
 
         double eegLineNullPoint = 12;
 
-        double eegLineCurrentPosition = 0;
+        //double eegLineCurrentPosition = 0;
 
         /// <summary>
         /// Current data list index depending on current video position.
@@ -92,20 +87,12 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         double eyeY = 0;
 
+        BasicDSP.Graph graph;
+
         public MainWindow()
         {
-            data = new ChartInput();
             InitializeComponent();
-            this.DataContext = data;
-
             MediaCanvas.SizeChanged += MediaCanvas_SizeChanged;
-            EEGDataCanvas.SizeChanged += EEGDataCanvas_SizeChanged;
-        }
-
-        void EEGDataCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            LineChart.Height = EEGDataCanvas.ActualHeight;
-            LineChart.Width = EEGDataCanvas.ActualWidth;
         }
 
         /// <summary>
@@ -179,20 +166,24 @@ namespace EEGETAnalysis.GUI
 
             eyePoint.Visibility = Visibility.Hidden;
 
-            eegLine = new Line();
-            eegLine.Stroke = Brushes.Red;
-            eegLine.StrokeThickness = 1;
-            eegLine.Height = 130;
-            eegLine.Width = 1000000;
-            eegLine.X1 = eegLineNullPoint;
-            eegLine.Y1 = 47;
-            eegLine.X2 = eegLineNullPoint;
-            eegLine.Y2 = 300;
+            //eegLine = new Line();
+            //eegLine.Stroke = Brushes.Red;
+            //eegLine.StrokeThickness = 1;
+            //eegLine.Height = 130;
+            //eegLine.Width = 1000000;
+            //eegLine.X1 = eegLineNullPoint;
+            //eegLine.Y1 = 47;
+            //eegLine.X2 = eegLineNullPoint;
+            //eegLine.Y2 = 300;
 
-            EEGDataCanvas.Children.Add(eegLine);
+            System.Windows.Forms.Integration.WindowsFormsHost host = new System.Windows.Forms.Integration.WindowsFormsHost();
+            ZedGraph.ZedGraphControl zedGraph = new ZedGraph.ZedGraphControl();
+            zedGraph.IsEnableZoom = false;
+            host.Child = zedGraph;
+            EEGGrid.Children.Add(host);
 
-            Style dataPointStyle = GetNewDataPointStyle();
-            series.DataPointStyle = dataPointStyle;
+            graph = new BasicDSP.Graph(zedGraph.CreateGraphics(), zedGraph);
+            
         }
 
         /// <summary>
@@ -259,15 +250,15 @@ namespace EEGETAnalysis.GUI
 
             // EEG data (BEGIN)
             //this.data.Add(new KeyValuePair<long, long>(mp.Position.Seconds, Convert.ToInt64(eegt7[currentDataIndex].Substring(0, eegt7[currentDataIndex].Length - 3))));
-            DrawEEGLine();
+            //DrawEEGLine();
             // EEG data (END)
         }
 
         private void DrawEEGLine()
         {
-            eegLineCurrentPosition = series.ActualWidth * currentVideoPositionInPercent;
-            eegLine.X1 = eegLineCurrentPosition + eegLineNullPoint;
-            eegLine.X2 = eegLineCurrentPosition + eegLineNullPoint;
+            //eegLineCurrentPosition = series.ActualWidth * currentVideoPositionInPercent;
+            //eegLine.X1 = eegLineCurrentPosition + eegLineNullPoint;
+            //eegLine.X2 = eegLineCurrentPosition + eegLineNullPoint;
         }
 
         /// <summary>
@@ -278,11 +269,6 @@ namespace EEGETAnalysis.GUI
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             mp.Position = TimeSpan.FromSeconds(Slider.Value);
-
-            //if (!videoIsPlaying)
-            //{
-            //    this.data.Clear();
-            //}
         }
 
         /// <summary>
@@ -332,28 +318,6 @@ namespace EEGETAnalysis.GUI
         }
 
         /// <summary>
-        /// Disable dots on the line chart for better performance.
-        /// </summary>
-        /// <returns></returns>
-        private static Style GetNewDataPointStyle()
-        {
-            Color background = Color.FromRgb(0, 0, 0);
-            Style style = new Style(typeof(DataPoint));
-            Setter st1 = new Setter(DataPoint.BackgroundProperty, 
-                                        new SolidColorBrush(background));
-            Setter st2 = new Setter(DataPoint.BorderBrushProperty, 
-                                        new SolidColorBrush(Colors.White));
-            Setter st3 = new Setter(DataPoint.BorderThicknessProperty, new Thickness(0.1));
-
-            Setter st4 = new Setter(DataPoint.TemplateProperty, null);
-            style.Setters.Add(st1);
-            style.Setters.Add(st2);
-            style.Setters.Add(st3);
-            style.Setters.Add(st4);
-            return style;
-        }
-
-        /// <summary>
         /// Process / parse the CSV file, open the video, add data to chart, enable controls.
         /// </summary>
         /// <param name="sender"></param>
@@ -384,15 +348,6 @@ namespace EEGETAnalysis.GUI
                 Sampler sampler = new Sampler(csvData, sampleRate);
                 samples = sampler.FindAllGoodSamples();
 
-                if (samples.Count > 0)
-                {
-                    // @TODO: Andere Lösung finden
-                    for (int i = 0; i < samples.Count; i = i++)
-                    {
-                        this.data.Add(new KeyValuePair<double, double>(samples[i].timestamp, samples[i].T7));
-                    }
-                }
-
                 SetControlButtonsEnabled(true);
 
                 SelectCsvFileButton.IsEnabled = false;
@@ -402,10 +357,14 @@ namespace EEGETAnalysis.GUI
                 ResetButton.IsEnabled = true;
 
                 // Get the charts distance to the canvas border to draw it on the right place
-                Point relativeLocation = series.TranslatePoint(new Point(0, 0), LineChart);
-                eegLineNullPoint = relativeLocation.Y;
+                //Point relativeLocation = series.TranslatePoint(new Point(0, 0), LineChart);
+                //eegLineNullPoint = relativeLocation.Y;
 
-                DrawEEGLine();
+                //DrawEEGLine();
+                BasicDSP.Waveform waveformT8 = sampler.GetEEGWaveformT8();
+                graph.PlotClear(1);
+                graph.PlotWaveform(1, ref waveformT8, "T8");
+                
             }
             catch (System.IO.IOException ex)
             {
@@ -443,7 +402,7 @@ namespace EEGETAnalysis.GUI
         private void ResetButton_Click(object sender, RoutedEventArgs e)
         {
             mp.Close();
-            this.data.Clear();
+            graph.PlotClear(1);
             Slider.Value = 0;
             SetControlButtonsEnabled(false);
             CsvFilePathTextBox.Text = null;
