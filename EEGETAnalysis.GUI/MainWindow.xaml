@@ -32,10 +32,8 @@
                 <Grid Margin="0,5,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
-                        <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Button x:Name="ResetButton" Click="ResetButton_Click">Reset</Button>
-                    <Button x:Name="ExecuteButton" Click="ExecuteButton_Click" Grid.Column="1">Execute</Button>
                 </Grid>
             </StackPanel>
         </GroupBox>
