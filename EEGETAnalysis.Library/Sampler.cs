@@ -111,7 +111,7 @@ namespace EEGETAnalysis.Library
         {
             List<Sample> samples = FindAllGoodSamples();
 
-            Waveform signal = new Waveform(samples.Count, sampleRate);
+            Waveform signal = new Waveform(0, sampleRate);
             foreach (Sample sample in samples)
             {
                 if (mode == 1)
