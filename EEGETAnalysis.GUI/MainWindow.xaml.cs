@@ -14,7 +14,6 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using EEGETAnalysis.Library;
 using System.Windows.Threading;
-using System.Windows.Controls.DataVisualization.Charting;
 using System.Threading;
 
 namespace EEGETAnalysis.GUI
@@ -179,6 +178,7 @@ namespace EEGETAnalysis.GUI
             System.Windows.Forms.Integration.WindowsFormsHost host = new System.Windows.Forms.Integration.WindowsFormsHost();
             ZedGraph.ZedGraphControl zedGraph = new ZedGraph.ZedGraphControl();
             zedGraph.IsEnableZoom = false;
+            zedGraph.Font = new System.Drawing.Font(zedGraph.Font.FontFamily.Name, 28f);
             host.Child = zedGraph;
             EEGGrid.Children.Add(host);
 
