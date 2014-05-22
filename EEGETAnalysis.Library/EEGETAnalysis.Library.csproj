@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CsvParser.cs" />
+    <Compile Include="EEGAnalyzer.cs" />
     <Compile Include="EEGETData.cs" />
     <Compile Include="MetaDataDictionary.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
