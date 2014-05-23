@@ -362,8 +362,12 @@ namespace EEGETAnalysis.GUI
 
                 //DrawEEGLine();
                 BasicDSP.Waveform waveformT8 = sampler.GetEEGWaveformT8();
+
+                EEGETAnalysis.Library.EEGAnalyzer analyzer = new EEGAnalyzer(waveformT8, sampleRate);
+                BasicDSP.Waveform waveformT8Beta = analyzer.filterAlpha();
+
                 graph.PlotClear(1);
-                graph.PlotWaveform(1, ref waveformT8, "T8");
+                graph.PlotWaveform(1, ref waveformT8Beta, "T8");
                 
             }
             catch (System.IO.IOException ex)
