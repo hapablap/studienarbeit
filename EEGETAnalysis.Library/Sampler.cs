@@ -18,6 +18,8 @@ namespace EEGETAnalysis.Library
         int eyeXColumnNo = 0;
         int eyeYColumnNo = 0;
 
+        List<Sample> sampleList;
+
         public Sampler(List<List<String>> csvData, int sampleRate)
         {
             this.csvData = csvData;
@@ -41,6 +43,8 @@ namespace EEGETAnalysis.Library
 
             csvData.RemoveRange(0, 2);
             csvData.RemoveAt(csvData.Count - 1);
+
+            findAllGoodSamples();
         }
 
         
@@ -94,24 +98,26 @@ namespace EEGETAnalysis.Library
             return sample;
         }
 
-        public List<Sample> FindAllGoodSamples()
+        public List<Sample> GetAllGoodSamples()
         {
-            List<Sample> sampleList = new List<Sample>();
+            return sampleList;
+        }
+
+        private void findAllGoodSamples()
+        {
+            sampleList = new List<Sample>();
             Sample sample = GetSample(0);
             sampleList.Add(sample);
             while ((sample = FindNextGoodSample(sample)) != null)
             {
                 sampleList.Add(sample);
             }
-            return sampleList;
         }
 
         public Waveform GetEEGWaveform(int mode)
         {
-            List<Sample> samples = FindAllGoodSamples();
-
             Waveform signal = new Waveform(0, sampleRate);
-            foreach (Sample sample in samples)
+            foreach (Sample sample in sampleList)
             {
                 if (mode == 1)
                 {

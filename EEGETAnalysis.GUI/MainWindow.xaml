@@ -7,7 +7,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="100" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="180" />
+            <RowDefinition Height="220" />
             <RowDefinition Height="65" />
         </Grid.RowDefinitions>
         <GroupBox Grid.Row="0" Header="Input">
@@ -32,16 +32,27 @@
                 <Grid Margin="0,5,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
-                        <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Button x:Name="ResetButton" Click="ResetButton_Click">Reset</Button>
-                    <Button x:Name="ExecuteButton" Click="ExecuteButton_Click" Grid.Column="1">Execute</Button>
                 </Grid>
             </StackPanel>
         </GroupBox>
         <Canvas x:Name="MediaCanvas" Grid.Row="1"></Canvas>
         <GroupBox Grid.Row="2" Header="EEG Data">
-            <Grid Name="EEGGrid"></Grid>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <CheckBox x:Name="OriginalWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Original Welle</CheckBox>
+                    <CheckBox x:Name="AlphaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Alpha</CheckBox>
+                    <CheckBox x:Name="BetaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Beta</CheckBox>
+                    <CheckBox x:Name="ThetaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Theta</CheckBox>
+                    <CheckBox x:Name="DeltaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Delta</CheckBox>
+                </StackPanel>
+                <Grid Name="EEGGrid" Grid.Row="1"></Grid>
+            </Grid>
             <!--<Canvas x:Name="EEGDataCanvas">
                 --><!--<chartingToolkit:Chart Name="LineChart" VerticalAlignment="Stretch">
                     <chartingToolkit:LineSeries DependentValuePath="Value" IndependentValuePath="Key" ItemsSource="{Binding ValueList}" x:Name="series"/>
