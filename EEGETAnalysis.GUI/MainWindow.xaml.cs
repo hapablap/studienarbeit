@@ -198,7 +198,6 @@ namespace EEGETAnalysis.GUI
             System.Windows.Forms.Integration.WindowsFormsHost host = new System.Windows.Forms.Integration.WindowsFormsHost();
             zedGraph = new ZedGraph.ZedGraphControl();
             zedGraph.IsEnableZoom = false;
-            zedGraph.Font = new System.Drawing.Font(zedGraph.Font.FontFamily.Name, 28f);
             host.Child = zedGraph;
             EEGGrid.Children.Add(host);
 
