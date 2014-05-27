@@ -140,7 +140,7 @@ namespace EEGETAnalysis.GUI
         }
 
         /// <summary>
-        /// Enable the start analysis button only if input data is set
+        /// Process if input data is set (CSV and media)
         /// </summary>
         private void enableStartAnalysisButtonIfPathsAreSet()
         {
@@ -198,7 +198,6 @@ namespace EEGETAnalysis.GUI
             System.Windows.Forms.Integration.WindowsFormsHost host = new System.Windows.Forms.Integration.WindowsFormsHost();
             zedGraph = new ZedGraph.ZedGraphControl();
             zedGraph.IsEnableZoom = false;
-            zedGraph.Font = new System.Drawing.Font(zedGraph.Font.FontFamily.Name, 28f);
             host.Child = zedGraph;
             EEGGrid.Children.Add(host);
 
@@ -542,9 +541,11 @@ namespace EEGETAnalysis.GUI
         /// <param name="e"></param>
         private void PlayButton_Click(object sender, RoutedEventArgs e)
         {
+            PlayButton.IsEnabled = false;
             mp.Play();
             timer.Start();
             eyePoint.Visibility = Visibility.Visible;
+            PauseButton.IsEnabled = true;
         }
 
         /// <summary>
@@ -555,8 +556,10 @@ namespace EEGETAnalysis.GUI
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
             mp.Stop();
+            mp.Position = new TimeSpan(0);
             timer.Stop();
             PlayButton.IsEnabled = true;
+            PauseButton.IsEnabled = false;
         }
 
         /// <summary>
@@ -568,6 +571,8 @@ namespace EEGETAnalysis.GUI
         {
             mp.Pause();
             timer.Stop();
+            PlayButton.IsEnabled = true;
+            PauseButton.IsEnabled = false;
         }
 
         /// <summary>
