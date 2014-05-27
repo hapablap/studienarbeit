@@ -140,7 +140,7 @@ namespace EEGETAnalysis.GUI
         }
 
         /// <summary>
-        /// Enable the start analysis button only if input data is set
+        /// Process if input data is set (CSV and media)
         /// </summary>
         private void enableStartAnalysisButtonIfPathsAreSet()
         {
