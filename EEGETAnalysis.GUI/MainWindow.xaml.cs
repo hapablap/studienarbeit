@@ -87,6 +87,8 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         double eyeY = 0;
 
+        int sampleRate;
+
         /// <summary>
         /// Graph which is used to paint line chart on the ZedGraphControl
         /// </summary>
@@ -415,7 +417,7 @@ namespace EEGETAnalysis.GUI
                 CsvParser parser = new CsvParser(CsvFilePathTextBox.Text);
                 csvData = parser.Parse();
 
-                int sampleRate = Convert.ToInt32(parser.GetMetaDataDictionary().GetValue("Sample Rate"));
+                sampleRate = Convert.ToInt32(parser.GetMetaDataDictionary().GetValue("Sample Rate"));
 
                 sampler = new Sampler(csvData, sampleRate);
                 samples = sampler.GetAllGoodSamples();
@@ -428,10 +430,6 @@ namespace EEGETAnalysis.GUI
                 ResetButton.IsEnabled = true;
 
                 graph.PlotClear(1);
-                BasicDSP.Waveform waveformT7 = sampler.GetEEGWaveformT7();
-                graph.PlotWaveform(1, ref waveformT7, "");
-                BasicDSP.Waveform waveformT8 = sampler.GetEEGWaveformT8();
-                graph.PlotWaveform(1, ref waveformT8, "");
 
                 ZedGraphRefresh();
 
@@ -451,37 +449,38 @@ namespace EEGETAnalysis.GUI
             graph.PlotClear(1);
 
             BasicDSP.Waveform waveformT7 = sampler.GetEEGWaveformT7();
-            EEGAnalyzer analyzer = new EEGAnalyzer(waveformT7);
+            BasicDSP.Signal signalT7 = waveformT7.Quantise();
+            EEGAnalyzer analyzer = new EEGAnalyzer(waveformT7, sampleRate);
 
             if (OriginalWaveCheckBox.IsChecked == true)
             {
-                graph.PlotWaveform(1, ref waveformT7, "");
-                BasicDSP.Waveform waveformT8 = sampler.GetEEGWaveformT8();
-                graph.PlotWaveform(1, ref waveformT8, "");
+                graph.PlotSignal(1, ref signalT7, "");
+                BasicDSP.Signal waveformT8 = sampler.GetEEGWaveformT8().Quantise();
+                graph.PlotSignal(1, ref waveformT8, "");
             }
 
             if(AlphaWaveCheckBox.IsChecked == true)
             {
-                BasicDSP.Waveform waveformAlpha = analyzer.filterAlpha();
-                graph.PlotWaveform(1, ref waveformAlpha, "");
+                BasicDSP.Signal waveformAlpha = analyzer.FilterAlpha().Quantise();
+                graph.PlotSignal(1, ref waveformAlpha, "");
             }
 
             if (BetaWaveCheckBox.IsChecked == true)
             {
-                BasicDSP.Waveform waveformBeta = analyzer.filterAlpha();
-                graph.PlotWaveform(1, ref waveformBeta, "");
+                BasicDSP.Signal waveformBeta = analyzer.FilterBeta().Quantise();
+                graph.PlotSignal(1, ref waveformBeta, "");
             }
 
             if (ThetaWaveCheckBox.IsChecked == true)
             {
-                BasicDSP.Waveform waveformTheta = analyzer.filterAlpha();
-                graph.PlotWaveform(1, ref waveformTheta, "");
+                BasicDSP.Signal waveformTheta = analyzer.FilterTheta().Quantise();
+                graph.PlotSignal(1, ref waveformTheta, "");
             }
 
             if (DeltaWaveCheckBox.IsChecked == true)
             {
-                BasicDSP.Waveform waveformDelta = analyzer.filterAlpha();
-                graph.PlotWaveform(1, ref waveformDelta, "");
+                BasicDSP.Signal waveformDelta = analyzer.FilterDelta().Quantise();
+                graph.PlotSignal(1, ref waveformDelta, "");
             }
 
             ZedGraphRefresh();

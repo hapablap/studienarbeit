@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BasicDSP;
+using System.IO;
 
 namespace EEGETAnalysis.Library
 {
@@ -114,33 +115,35 @@ namespace EEGETAnalysis.Library
             }
         }
 
-        public Waveform GetEEGWaveform(int mode)
+        public Waveform getEEGWaveform(int mode)
         {
-            Waveform signal = new Waveform(0, sampleRate);
+            Waveform Waveform = new Waveform(0, sampleRate);
             foreach (Sample sample in sampleList)
             {
                 if (mode == 1)
                 {
-                    signal.Add(sample.T7);
+                    Waveform.Add(sample.T7);
                 }
                 else
                 {
-                    signal.Add(sample.T8);
+                    Waveform.Add(sample.T8);
                 }
             }
 
-            return signal;
+            return Waveform;
         }
 
         public Waveform GetEEGWaveformT7()
         {
-            return GetEEGWaveform(1);
+            return getEEGWaveform(1);
         }
 
         public Waveform GetEEGWaveformT8()
         {
-            return GetEEGWaveform(2);
+            return getEEGWaveform(2);
         }
 
+
     }
+
 }
