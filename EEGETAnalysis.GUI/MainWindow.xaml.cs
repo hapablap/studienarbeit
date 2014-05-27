@@ -540,9 +540,11 @@ namespace EEGETAnalysis.GUI
         /// <param name="e"></param>
         private void PlayButton_Click(object sender, RoutedEventArgs e)
         {
+            PlayButton.IsEnabled = false;
             mp.Play();
             timer.Start();
             eyePoint.Visibility = Visibility.Visible;
+            PauseButton.IsEnabled = true;
         }
 
         /// <summary>
@@ -553,8 +555,10 @@ namespace EEGETAnalysis.GUI
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
             mp.Stop();
+            mp.Position = new TimeSpan(0);
             timer.Stop();
             PlayButton.IsEnabled = true;
+            PauseButton.IsEnabled = false;
         }
 
         /// <summary>
@@ -566,6 +570,8 @@ namespace EEGETAnalysis.GUI
         {
             mp.Pause();
             timer.Stop();
+            PlayButton.IsEnabled = true;
+            PauseButton.IsEnabled = false;
         }
 
         /// <summary>
