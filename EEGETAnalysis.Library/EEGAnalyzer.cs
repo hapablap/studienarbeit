@@ -51,6 +51,7 @@ namespace EEGETAnalysis.Library
 
 
         // Komplexwertiges Spektrum zurückgeben
+        // Anzeige des Amplitudenspektrums erfolgt mit Graph.PlotDbSpectrum
         public Spectrum GetSpectrum(int beginSample, int length)
         {
             // 1 Sekunde langes Stück herausschneiden
@@ -78,24 +79,32 @@ namespace EEGETAnalysis.Library
         }
 
 
-        /* unfertig
-        public Waveform getAlphaActivity()
+        
+        public Waveform GetAlphaActivity()
         {
 
-            // wir benötigen eine leere Waveform mit einem Sample pro Sekunde
-            Waveform activityWaveform = new Waveform(0, 1);
+            // wir nehmen das Spektrum der letzen 32 Samples
+            int retrospectionCount = 32;
 
-            // zu Beginn können wir noch keine Aktivität berechnen
-            activityWaveform.Add(0);
+            // wir benötigen eine leere Waveform
+            Waveform activityWaveform = new Waveform(0, sampleRate);
 
-            for (int i = 0; i < (waveform.Count / sampleRate); i++)
+            // zu Beginn können wir noch keine Aktivität berechnen, setze ersten Werte auf 0
+            for (int i = 0; i < 32; i++)
             {
-                Waveform phaseSpectrum = getPhaseSpectrum(i * sampleRate, sampleRate);
-
-
+                activityWaveform.Add(0);
             }
+
+
+            for (int i = 0; i < waveform.Count - retrospectionCount; i++)
+            {
+                Waveform phaseSpectrum = GetAmplitudeSpectrum(i, retrospectionCount);
+                //TODO continue
+            }
+
+            return null;
         }
-        */
+        
 
     }
 }
