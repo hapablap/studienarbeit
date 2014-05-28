@@ -6,13 +6,12 @@ using System.Threading.Tasks;
 
 namespace EEGETAnalysis.Library
 {
-    public class Sample
+    public class EEGSample
     {
         public int index;
         public long timestamp;
         public double eyeX;
         public double eyeY;
-        public double T7;
-        public double T8;
+        public Dictionary<Electrode, double> eegValues = new Dictionary<Electrode,double>();
     }
 }

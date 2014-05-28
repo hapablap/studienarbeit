@@ -48,7 +48,7 @@ namespace EEGETAnalysis.GUI
         /// <summary>
         /// Sample data from CSV
         /// </summary>
-        List<Sample> samples = null;
+        List<EEGSample> samples = null;
 
         /// <summary>
         /// Video size in percent. Value is used to calculate video size on window resize.
@@ -447,14 +447,14 @@ namespace EEGETAnalysis.GUI
         {
             graph.PlotClear(1);
 
-            BasicDSP.Waveform waveformT7 = sampler.GetEEGWaveformT7();
+            BasicDSP.Waveform waveformT7 = sampler.GetEEGWaveform(Electrode.T7);
             BasicDSP.Signal signalT7 = waveformT7.Quantise();
             EEGAnalyzer analyzer = new EEGAnalyzer(waveformT7, sampleRate);
 
             if (OriginalWaveCheckBox.IsChecked == true)
             {
                 graph.PlotSignal(1, ref signalT7, "");
-                BasicDSP.Signal waveformT8 = sampler.GetEEGWaveformT8().Quantise();
+                BasicDSP.Signal waveformT8 = sampler.GetEEGWaveform(Electrode.T8).Quantise();
                 graph.PlotSignal(1, ref waveformT8, "");
             }
 

@@ -10,22 +10,24 @@ namespace EEGETAnalysis.Library
 {
     public class Sampler
     {
+
+
         List<List<String>> csvData;
         int sampleRate;
 
         int timestampPosition = 0;
-        int t7ColumnNo = 0;
-        int t8ColumnNo = 0;
+
+        Dictionary<Electrode, int> columnNumbers = new Dictionary<Electrode, int>();
         int eyeXColumnNo = 0;
         int eyeYColumnNo = 0;
 
-        List<Sample> sampleList;
+        List<EEGSample> sampleList;
 
         public Sampler(List<List<String>> csvData, int sampleRate)
         {
             this.csvData = csvData;
             this.sampleRate = sampleRate;
-            
+
             // Find column numbers of relevant data
             foreach (List<String> row in csvData)
             {
@@ -33,10 +35,18 @@ namespace EEGETAnalysis.Library
                 foreach (String content in row)
                 {
                     if (content == "Time") { timestampPosition = i; }
-                    else if (content == "EEG_RAW_T7") { t7ColumnNo = i; }
-                    else if (content == "EEG_RAW_T8") { t8ColumnNo = i; }
                     else if (content == "L POR X [px]") { eyeXColumnNo = i; }
                     else if (content == "L POR Y [px]") { eyeYColumnNo = i; }
+                    else
+                    {
+                        foreach (Electrode electrode in (Electrode[])Enum.GetValues(typeof(Electrode)))
+                        {
+                            if (content == "EEG_RAW_" + electrode)
+                            {
+                                columnNumbers.Add(electrode, i);
+                            }
+                        }
+                    }
                     i++;
                 }
                 if (i > 0) break;
@@ -45,21 +55,68 @@ namespace EEGETAnalysis.Library
             csvData.RemoveRange(0, 2);
             csvData.RemoveAt(csvData.Count - 1);
 
-            findAllGoodSamples();
+            FindAllGoodSamples();
+        }
+       
+
+        public List<EEGSample> GetAllGoodSamples()
+        {
+            return sampleList;
         }
 
-        
-        public Sample FindNextGoodSample(Sample startSample)
+
+
+        public Waveform GetEEGWaveform(Electrode electrode)
+        {
+            Waveform Waveform = new Waveform(0, sampleRate);
+            foreach (EEGSample sample in sampleList)
+            {
+                Waveform.Add(sample.eegValues[electrode]);
+            }
+
+            return Waveform;
+        }
+
+
+
+
+
+        // PRIVATE METHODS TO FIND SAMPLES
+
+        private EEGSample GetSample(int i)
+        {
+            if (i >= csvData.Count) return null;
+            List<String> row = csvData[i];
+            EEGSample sample = new EEGSample();
+            sample.index = i;
+            sample.timestamp = Convert.ToInt64(row[timestampPosition]);
+
+            Electrode electrode;
+            int columnNo;
+            foreach (KeyValuePair<Electrode, int> column in columnNumbers)
+            {
+                electrode = column.Key;
+                columnNo = column.Value;
+                sample.eegValues.Add(electrode, Convert.ToDouble(row[columnNo], System.Globalization.CultureInfo.InvariantCulture));
+            }
+
+            sample.eyeX = Convert.ToDouble(row[eyeXColumnNo], System.Globalization.CultureInfo.InvariantCulture);
+            sample.eyeY = Convert.ToDouble(row[eyeYColumnNo], System.Globalization.CultureInfo.InvariantCulture);
+
+            return sample;
+        }
+
+        private EEGSample FindNextGoodSample(EEGSample startSample)
         {
 
             int i = startSample.index;
 
-            long timestampWanted = (long) (startSample.timestamp + (1000000 / sampleRate));
+            long timestampWanted = (long)(startSample.timestamp + (1000000 / sampleRate));
             long bestDifferenceToWantedTimestamp = startSample.timestamp;
-            Sample bestSample = null;
+            EEGSample bestSample = null;
 
             // Überspringe aufeinanderfolgende Timestamps mit demselben Wert. Manchmal häufen die sich.
-            Sample nextSample = GetSample(i + 1);
+            EEGSample nextSample = GetSample(i + 1);
             while (nextSample != null && nextSample.timestamp == startSample.timestamp)
             {
                 i++;
@@ -84,65 +141,16 @@ namespace EEGETAnalysis.Library
 
         }
 
-        public Sample GetSample(int i)
+        private void FindAllGoodSamples()
         {
-            if (i >= csvData.Count) return null;
-            List<String> row = csvData[i];
-            Sample sample = new Sample();
-            sample.index = i;
-            sample.timestamp = Convert.ToInt64(row[timestampPosition]);
-            sample.T7 = Convert.ToDouble(row[t7ColumnNo], System.Globalization.CultureInfo.InvariantCulture);
-            sample.T8 = Convert.ToDouble(row[t8ColumnNo], System.Globalization.CultureInfo.InvariantCulture);
-            sample.eyeX = Convert.ToDouble(row[eyeXColumnNo], System.Globalization.CultureInfo.InvariantCulture);
-            sample.eyeY = Convert.ToDouble(row[eyeYColumnNo], System.Globalization.CultureInfo.InvariantCulture);
-
-            return sample;
-        }
-
-        public List<Sample> GetAllGoodSamples()
-        {
-            return sampleList;
-        }
-
-        private void findAllGoodSamples()
-        {
-            sampleList = new List<Sample>();
-            Sample sample = GetSample(0);
+            sampleList = new List<EEGSample>();
+            EEGSample sample = GetSample(0);
             sampleList.Add(sample);
             while ((sample = FindNextGoodSample(sample)) != null)
             {
                 sampleList.Add(sample);
             }
         }
-
-        public Waveform getEEGWaveform(int mode)
-        {
-            Waveform Waveform = new Waveform(0, sampleRate);
-            foreach (Sample sample in sampleList)
-            {
-                if (mode == 1)
-                {
-                    Waveform.Add(sample.T7);
-                }
-                else
-                {
-                    Waveform.Add(sample.T8);
-                }
-            }
-
-            return Waveform;
-        }
-
-        public Waveform GetEEGWaveformT7()
-        {
-            return getEEGWaveform(1);
-        }
-
-        public Waveform GetEEGWaveformT8()
-        {
-            return getEEGWaveform(2);
-        }
-
 
     }
 
