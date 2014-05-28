@@ -460,10 +460,8 @@ namespace EEGETAnalysis.GUI
 
             if(AlphaWaveCheckBox.IsChecked == true)
             {
-                //BasicDSP.Signal waveformAlpha = analyzer.FilterAlpha().Quantise();
-                //graph.PlotSignal(1, ref waveformAlpha, "");
-                BasicDSP.Waveform spectrum = analyzer.GetAmplitudeSpectrum(50, 128);
-                graph.PlotWaveform(1, ref spectrum, "");
+                BasicDSP.Signal waveformAlpha = analyzer.FilterAlpha().Quantise();
+                graph.PlotSignal(1, ref waveformAlpha, "");
             }
 
             if (BetaWaveCheckBox.IsChecked == true)
