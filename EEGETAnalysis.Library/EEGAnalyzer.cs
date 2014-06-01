@@ -10,52 +10,48 @@ namespace EEGETAnalysis.Library
     public class EEGAnalyzer
     {
 
-        Waveform waveform;
-        int sampleRate;
+        public Waveform Waveform { get; private set; }
+        double sampleRate;
 
-        public EEGAnalyzer(Waveform Waveform, int sampleRate)
+        public EEGAnalyzer(Waveform Waveform)
         {
-            this.waveform = Waveform;
-            this.sampleRate = sampleRate;
+            this.Waveform = Waveform;
+            this.sampleRate = Waveform.Rate;
+        }
+
+        /// <summary>
+        /// Wendet einen Band-Pass-Filter auf die Waveform an.
+        /// </summary>
+        /// <param name="eegBand">Das Frequenzband, auf das die Waveform beschränkt werden soll.</param>
+        /// <returns>Die gefilterte Waveform.</returns>
+        public Waveform FilterBand(EEGBand eegBand)
+        {
+            LTISystem filterSystem = Filter.NRBandPass(eegBand.GetMinFreq() / sampleRate, eegBand.GetMaxFreq() / sampleRate, 10);
+            Waveform wf = this.Waveform;
+            return filterSystem.Filter(ref wf);
         }
         
-        public Waveform FilterBeta()
-        {
-            LTISystem filterSystem = Filter.NRBandPass(12.5 / sampleRate, 30 / sampleRate, 10);
-            return filterSystem.Filter(ref this.waveform);
-        }
 
-        public Waveform FilterAlpha()
-        {
-            LTISystem filterSystem = Filter.NRBandPass(7.5 / sampleRate, 12.5 / sampleRate, 10);
-            return filterSystem.Filter(ref this.waveform);
-        }
-
-        public Waveform FilterTheta()
-        {
-            LTISystem filterSystem = Filter.NRBandPass(3.5 / sampleRate, 7.5 / sampleRate, 10);
-            return filterSystem.Filter(ref this.waveform);
-        }
-
-        public Waveform FilterDelta()
-        {
-            LTISystem filterSystem = Filter.NRBandPass(0.5 / sampleRate, 3.5 / sampleRate, 10);
-            return filterSystem.Filter(ref this.waveform);
-        }
-
-
+        /// <summary>
+        /// Speichert die Waveform in einer WAV-Datei.
+        /// </summary>
+        /// <param name="filename">Der gewünschte vollständige Dateiname mit Pfad.</param>
         public void SaveWavFile(String filename)
         {
-            waveform.Quantise().SaveWaveFile(filename);
+            Waveform.Quantise().SaveWaveFile(filename);
         }
 
 
-        // Komplexwertiges Spektrum zurückgeben
-        // Anzeige des Amplitudenspektrums erfolgt mit Graph.PlotDbSpectrum
+        /// <summary>
+        /// Ermittelt das Spektrum eines Signalausschnitts.
+        /// </summary>
+        /// <param name="beginSample">Beginn des Signalausschnitts (Index)</param>
+        /// <param name="length">Länge des Signalausschnitts (Zahl der Indizes)</param>
+        /// <returns>Das komplexwertige Spektrum. Seine Länge ist length / 2.</returns>
         public Spectrum GetSpectrum(int beginSample, int length)
         {
             // 1 Sekunde langes Stück herausschneiden
-            Waveform cutWaveform = waveform.Cut(beginSample, length);
+            Waveform cutWaveform = Waveform.Cut(beginSample, length);
 
             // Fensterfunktion anwenden, um Leck-Effekte an den Signalrändern zu vermeiden
             Waveform windowedCutWaveform = Window.Hamming(cutWaveform);
@@ -66,45 +62,70 @@ namespace EEGETAnalysis.Library
         }
 
 
-        // Amplitudenspektrum wird im Bereich 0 bis 1 zurückgegeben. 1 entspricht sampleRate / 2 Hz.
+        /// <summary>
+        /// Ermittelt das Amplitudenspektrum eines Singalausschnitts.
+        /// </summary>
+        /// <param name="beginSample">Beginn des Signalausschnitts (Index)</param>
+        /// <param name="length">Länge des Signalausschnitts (Zahl der Indizes)</param>
+        /// <returns>Das Amplitudenspektrum. Seine Länge ist length / 2.</returns>
         public Waveform GetAmplitudeSpectrum(int beginSample, int length) {
 
             Waveform magnitudeWaveform = GetSpectrum(beginSample, length).Mag();
-            for (int i = 0; i < magnitudeWaveform.Count; i++)
+            /*for (int i = magnitudeWaveform.First; i <= magnitudeWaveform.Last; i++)
             {
-                magnitudeWaveform[i] = Math.Pow(magnitudeWaveform[i], 1.0 / 10);
-            }
+                magnitudeWaveform[i] = Math.Log10(magnitudeWaveform[i]);
+            }*/
 
             return magnitudeWaveform;
         }
 
 
-        
-        public Waveform GetAlphaActivity()
+        /// <summary>
+        /// Generiert eine Waveform, die die sekündliche Aktivität eines EEG-Frequenzbandes wiederspiegelt.
+        /// </summary>
+        /// <param name="eegBand">zu analysierendes EEG-Frequenzband</param>
+        /// <returns>Waveform mit der Aktivität über die Zeit. Die Samplerate ist 1 Hz.</returns>
+        public Waveform GetActivity(EEGBand eegBand)
         {
 
-            // wir nehmen das Spektrum der letzen 32 Samples
-            int retrospectionCount = 32;
+            double minFreq = eegBand.GetMinFreq();
+            double maxFreq = eegBand.GetMaxFreq();
+
+            // wir nehmen das Spektrum der letzen 2 Sekunden
+            int retrospectionCount = (int) sampleRate * 2;
+
+            // die Samplerate der Activity-Waveform soll 1 Hz sein.
+            int activitySampleRate = 1;
+
+            // finde die Indizes im diskreten Spektrum, die Ober- und Unterkante des Frequenzbands darstellen
+            int minFreqIndex = EEGUtils.FindSpectrumIndexForFreq(minFreq, retrospectionCount / 2, (int) sampleRate);
+            int maxFreqIndex = EEGUtils.FindSpectrumIndexForFreq(maxFreq, retrospectionCount / 2, (int) sampleRate);
 
             // wir benötigen eine leere Waveform
-            Waveform activityWaveform = new Waveform(0, sampleRate);
+            Waveform activityWaveform = new Waveform(0, activitySampleRate);
 
-            // zu Beginn können wir noch keine Aktivität berechnen, setze ersten Werte auf 0
-            for (int i = 0; i < 32; i++)
+            // Ermittle das Frequenzspektrum in regelmäßigen Abständen  und berechne die Aktivität im Frequenzband
+            for (int i = Waveform.First; i <= Waveform.Last - retrospectionCount; i = i + ((int) sampleRate / activitySampleRate))
             {
-                activityWaveform.Add(0);
+                Waveform amplitudeSpectrum = GetAmplitudeSpectrum(i, retrospectionCount);
+                double activityValue = 0;
+                for (int j = minFreqIndex; j <= maxFreqIndex; j++)
+                {
+                    activityValue = activityValue + amplitudeSpectrum[j];
+                }
+                activityWaveform.Add(activityValue / (maxFreqIndex - minFreqIndex + 1));
             }
 
-
-            for (int i = 0; i < waveform.Count - retrospectionCount; i++)
+            // Die Waveform ist etwas zu kurz und die Werte beziehen sich jeweils auf zwei Sekunden später
+            // Kompensieren, indem die Welle nach hinten verschoben wird und die ersten Werte denselben Wert annehmen
+            Waveform compensationWaveform = new Waveform(0, activitySampleRate);
+            for (int i = 0; i <= retrospectionCount; i = i + ((int)sampleRate / activitySampleRate))
             {
-                Waveform phaseSpectrum = GetAmplitudeSpectrum(i, retrospectionCount);
-                //TODO continue
+                compensationWaveform.Add(activityWaveform[activityWaveform.First]);
             }
-
-            return null;
+            return EEGUtils.Concatenate(compensationWaveform, activityWaveform);
         }
-        
+
 
     }
 }

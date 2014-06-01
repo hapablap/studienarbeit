@@ -197,7 +197,7 @@ namespace EEGETAnalysis.GUI
 
             System.Windows.Forms.Integration.WindowsFormsHost host = new System.Windows.Forms.Integration.WindowsFormsHost();
             zedGraph = new ZedGraph.ZedGraphControl();
-            zedGraph.IsEnableZoom = false;
+            zedGraph.IsEnableZoom = true;
             host.Child = zedGraph;
             EEGGrid.Children.Add(host);
 
@@ -449,7 +449,8 @@ namespace EEGETAnalysis.GUI
 
             BasicDSP.Waveform waveformT7 = sampler.GetEEGWaveform(Electrode.T7);
             BasicDSP.Signal signalT7 = waveformT7.Quantise();
-            EEGAnalyzer analyzer = new EEGAnalyzer(waveformT7, sampleRate);
+            EEGAnalyzer analyzer = new EEGAnalyzer(waveformT7);
+            EEGEmotionizer emotionizer = new EEGEmotionizer(sampler);
 
             if (OriginalWaveCheckBox.IsChecked == true)
             {
@@ -460,25 +461,25 @@ namespace EEGETAnalysis.GUI
 
             if(AlphaWaveCheckBox.IsChecked == true)
             {
-                BasicDSP.Signal waveformAlpha = analyzer.FilterAlpha().Quantise();
+                BasicDSP.Signal waveformAlpha = analyzer.FilterBand(EEGBand.ALPHA).Quantise();
                 graph.PlotSignal(1, ref waveformAlpha, "");
             }
 
             if (BetaWaveCheckBox.IsChecked == true)
             {
-                BasicDSP.Signal waveformBeta = analyzer.FilterBeta().Quantise();
+                BasicDSP.Signal waveformBeta = analyzer.FilterBand(EEGBand.BETA).Quantise();
                 graph.PlotSignal(1, ref waveformBeta, "");
             }
 
             if (ThetaWaveCheckBox.IsChecked == true)
             {
-                BasicDSP.Signal waveformTheta = analyzer.FilterTheta().Quantise();
+                BasicDSP.Signal waveformTheta = analyzer.FilterBand(EEGBand.THETA).Quantise();
                 graph.PlotSignal(1, ref waveformTheta, "");
             }
 
             if (DeltaWaveCheckBox.IsChecked == true)
             {
-                BasicDSP.Signal waveformDelta = analyzer.FilterDelta().Quantise();
+                BasicDSP.Signal waveformDelta = analyzer.FilterBand(EEGBand.DELTA).Quantise();
                 graph.PlotSignal(1, ref waveformDelta, "");
             }
 

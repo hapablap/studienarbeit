@@ -21,7 +21,7 @@ namespace EEGETAnalysis.Library
         int eyeXColumnNo = 0;
         int eyeYColumnNo = 0;
 
-        List<EEGSample> sampleList;
+        List<EEGSample> goodSamples;
 
         public Sampler(List<List<String>> csvData, int sampleRate)
         {
@@ -61,7 +61,7 @@ namespace EEGETAnalysis.Library
 
         public List<EEGSample> GetAllGoodSamples()
         {
-            return sampleList;
+            return goodSamples;
         }
 
 
@@ -69,7 +69,7 @@ namespace EEGETAnalysis.Library
         public Waveform GetEEGWaveform(Electrode electrode)
         {
             Waveform Waveform = new Waveform(0, sampleRate);
-            foreach (EEGSample sample in sampleList)
+            foreach (EEGSample sample in goodSamples)
             {
                 Waveform.Add(sample.eegValues[electrode]);
             }
@@ -78,10 +78,17 @@ namespace EEGETAnalysis.Library
         }
 
 
+        public Dictionary<Electrode, Waveform> GetEEGWaveforms()
+        {
+            Dictionary<Electrode, Waveform> waveforms = new Dictionary<Electrode, Waveform>();
+            foreach (KeyValuePair<Electrode, int> availableElectrode in columnNumbers)
+            {
+                waveforms.Add(availableElectrode.Key, GetEEGWaveform(availableElectrode.Key));
+            }
+            return waveforms;
+        }
 
 
-
-        // PRIVATE METHODS TO FIND SAMPLES
 
         private EEGSample GetSample(int i)
         {
@@ -143,13 +150,20 @@ namespace EEGETAnalysis.Library
 
         private void FindAllGoodSamples()
         {
-            sampleList = new List<EEGSample>();
+            goodSamples = new List<EEGSample>();
+
             EEGSample sample = GetSample(0);
-            sampleList.Add(sample);
+            goodSamples.Add(sample);
             while ((sample = FindNextGoodSample(sample)) != null)
             {
-                sampleList.Add(sample);
+                goodSamples.Add(sample);
             }
+        }
+
+
+        public int GetSampleRate()
+        {
+            return sampleRate;
         }
 
     }
