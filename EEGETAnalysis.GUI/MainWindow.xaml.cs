@@ -160,7 +160,20 @@ namespace EEGETAnalysis.GUI
             PauseButton.IsEnabled = status;
             StopButton.IsEnabled = status;
             RewindButton.IsEnabled = status;
-            OriginalWaveCheckBox.IsEnabled = status;
+            AF3WaveCheckBox.IsEnabled = status;
+            AF4WaveCheckBox.IsEnabled = status;
+            F7WaveCheckBox.IsEnabled = status;
+            F3WaveCheckBox.IsEnabled = status;
+            FC5WaveCheckBox.IsEnabled = status;
+            T7WaveCheckBox.IsEnabled = status;
+            P7WaveCheckBox.IsEnabled = status;
+            O1WaveCheckBox.IsEnabled = status;
+            O2WaveCheckBox.IsEnabled = status;
+            P8WaveCheckBox.IsEnabled = status;
+            T8WaveCheckBox.IsEnabled = status;
+            FC6WaveCheckBox.IsEnabled = status;
+            F4WaveCheckBox.IsEnabled = status;
+            F8WaveCheckBox.IsEnabled = status;
             AlphaWaveCheckBox.IsEnabled = status;
             BetaWaveCheckBox.IsEnabled = status;
             ThetaWaveCheckBox.IsEnabled = status;
@@ -432,7 +445,7 @@ namespace EEGETAnalysis.GUI
 
                 ZedGraphRefresh();
 
-                OriginalWaveCheckBox.IsChecked = true;
+                //OriginalWaveCheckBox.IsChecked = true;
             }
             catch (System.IO.IOException ex)
             {
@@ -451,12 +464,13 @@ namespace EEGETAnalysis.GUI
             BasicDSP.Signal signalT7 = waveformT7.Quantise();
             EEGAnalyzer analyzer = new EEGAnalyzer(waveformT7, sampleRate);
 
-            if (OriginalWaveCheckBox.IsChecked == true)
-            {
-                graph.PlotSignal(1, ref signalT7, "");
-                BasicDSP.Signal waveformT8 = sampler.GetEEGWaveformT8().Quantise();
-                graph.PlotSignal(1, ref waveformT8, "");
-            }
+            // @TODO: Auf alle Wellen umbauen
+            //if (OriginalWaveCheckBox.IsChecked == true)
+            //{
+            //    graph.PlotSignal(1, ref signalT7, "");
+            //    BasicDSP.Signal waveformT8 = sampler.GetEEGWaveformT8().Quantise();
+            //    graph.PlotSignal(1, ref waveformT8, "");
+            //}
 
             if(AlphaWaveCheckBox.IsChecked == true)
             {

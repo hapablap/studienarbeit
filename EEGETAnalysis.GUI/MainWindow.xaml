@@ -41,23 +41,41 @@
         <GroupBox Grid.Row="2" Header="EEG Data">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="50"/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <CheckBox x:Name="OriginalWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Original Welle</CheckBox>
-                    <CheckBox x:Name="AlphaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Alpha</CheckBox>
-                    <CheckBox x:Name="BetaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Beta</CheckBox>
-                    <CheckBox x:Name="ThetaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Theta</CheckBox>
-                    <CheckBox x:Name="DeltaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Delta</CheckBox>
-                </StackPanel>
+                <TabControl>
+                    <TabItem Header="EEG Wellen">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <CheckBox x:Name="AF3WaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">AF3</CheckBox>
+                            <CheckBox x:Name="F7WaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">F7</CheckBox>
+                            <CheckBox x:Name="F3WaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">F3</CheckBox>
+                            <CheckBox x:Name="FC5WaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">FC5</CheckBox>
+                            <CheckBox x:Name="T7WaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">T7</CheckBox>
+                            <CheckBox x:Name="P7WaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">P7</CheckBox>
+                            <CheckBox x:Name="O1WaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">O1</CheckBox>
+                            <CheckBox x:Name="O2WaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">O2</CheckBox>
+                            <CheckBox x:Name="P8WaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">P8</CheckBox>
+                            <CheckBox x:Name="T8WaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">T8</CheckBox>
+                            <CheckBox x:Name="FC6WaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">FC6</CheckBox>
+                            <CheckBox x:Name="F4WaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">F4</CheckBox>
+                            <CheckBox x:Name="F8WaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">F8</CheckBox>
+                            <CheckBox x:Name="AF4WaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">AF4</CheckBox>
+                            <CheckBox x:Name="AlphaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Alpha</CheckBox>
+                            <CheckBox x:Name="BetaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Beta</CheckBox>
+                            <CheckBox x:Name="ThetaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Theta</CheckBox>
+                            <CheckBox x:Name="DeltaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Delta</CheckBox>
+                        </StackPanel>
+                    </TabItem>
+                    <TabItem Header="Spektren">
+
+                    </TabItem>
+                    <TabItem Header="Emotionen">
+
+                    </TabItem>
+                </TabControl>
                 <Grid Name="EEGGrid" Grid.Row="1"></Grid>
             </Grid>
-            <!--<Canvas x:Name="EEGDataCanvas">
-                --><!--<chartingToolkit:Chart Name="LineChart" VerticalAlignment="Stretch">
-                    <chartingToolkit:LineSeries DependentValuePath="Value" IndependentValuePath="Key" ItemsSource="{Binding ValueList}" x:Name="series"/>
-                </chartingToolkit:Chart>--><!--
-            </Canvas>-->
         </GroupBox>
         <GroupBox Grid.Row="3" Header="Controls">
             <Grid>
