@@ -48,7 +48,7 @@ namespace EEGETAnalysis.GUI
         /// <summary>
         /// Sample data from CSV
         /// </summary>
-        List<Sample> samples = null;
+        List<EEGSample> samples = null;
 
         /// <summary>
         /// Video size in percent. Value is used to calculate video size on window resize.
@@ -460,23 +460,86 @@ namespace EEGETAnalysis.GUI
         {
             graph.PlotClear(1);
 
-            BasicDSP.Waveform waveformT7 = sampler.GetEEGWaveformT7();
+            BasicDSP.Waveform waveformT7 = sampler.GetEEGWaveform(Electrode.T7);
             BasicDSP.Signal signalT7 = waveformT7.Quantise();
             EEGAnalyzer analyzer = new EEGAnalyzer(waveformT7);
 
-            // @TODO: Auf alle Wellen umbauen
-            //if (OriginalWaveCheckBox.IsChecked == true)
-            //{
-            //    graph.PlotSignal(1, ref signalT7, "");
-            //    BasicDSP.Signal waveformT8 = sampler.GetEEGWaveformT8().Quantise();
-            //    graph.PlotSignal(1, ref waveformT8, "");
-            //}
+            List<Electrode> activeElectrodeWaves = new List<Electrode>();
 
             if(AF3WaveCheckBox.IsChecked == true)
             {
-                BasicDSP.Waveform waveformAF3 = sampler.GetEEGWaveformAF3();
-                BasicDSP.Signal signalAF3 = waveformAF3.Quantise();
-                graph.PlotSignal(1, ref signalAF3, "");
+                activeElectrodeWaves.Add(Electrode.AF3);
+            }
+
+            if(F7WaveCheckBox.IsChecked == true)
+            {
+                activeElectrodeWaves.Add(Electrode.F7);
+            }
+
+            if(F3WaveCheckBox.IsChecked == true)
+            {
+                activeElectrodeWaves.Add(Electrode.F3);
+            }
+
+            if(FC5WaveCheckBox.IsChecked == true)
+            {
+                activeElectrodeWaves.Add(Electrode.FC5);
+            }
+
+            if (T7WaveCheckBox.IsChecked == true)
+            {
+                activeElectrodeWaves.Add(Electrode.T7);
+            }
+
+            if (P7WaveCheckBox.IsChecked == true)
+            {
+                activeElectrodeWaves.Add(Electrode.P7);
+            }
+
+            if (O1WaveCheckBox.IsChecked == true)
+            {
+                activeElectrodeWaves.Add(Electrode.O1);
+            }
+
+            if (O2WaveCheckBox.IsChecked == true)
+            {
+                activeElectrodeWaves.Add(Electrode.O2);
+            }
+
+            if (P8WaveCheckBox.IsChecked == true)
+            {
+                activeElectrodeWaves.Add(Electrode.P8);
+            }
+
+            if (T8WaveCheckBox.IsChecked == true)
+            {
+                activeElectrodeWaves.Add(Electrode.T8);
+            }
+
+            if (FC6WaveCheckBox.IsChecked == true)
+            {
+                activeElectrodeWaves.Add(Electrode.FC6);
+            }
+
+            if (F4WaveCheckBox.IsChecked == true)
+            {
+                activeElectrodeWaves.Add(Electrode.F4);
+            }
+
+            if (F8WaveCheckBox.IsChecked == true)
+            {
+                activeElectrodeWaves.Add(Electrode.F8);
+            }
+
+            if (AF4WaveCheckBox.IsChecked == true)
+            {
+                activeElectrodeWaves.Add(Electrode.AF4);
+            }
+            
+            foreach (Electrode electrode in activeElectrodeWaves)
+            {
+                BasicDSP.Signal signal = sampler.GetEEGWaveform(electrode).Quantise();
+                graph.PlotSignal(1, ref signal, "");
             }
 
             if(AlphaWaveCheckBox.IsChecked == true)
