@@ -115,6 +115,8 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         double EEGLineXPosition = 0;
 
+        Electrode CurrentElectrode;
+
         /// <summary>
         /// Window construct. Initialize componentes and events.
         /// </summary>
@@ -160,20 +162,7 @@ namespace EEGETAnalysis.GUI
             PauseButton.IsEnabled = status;
             StopButton.IsEnabled = status;
             RewindButton.IsEnabled = status;
-            AF3WaveCheckBox.IsEnabled = status;
-            AF4WaveCheckBox.IsEnabled = status;
-            F7WaveCheckBox.IsEnabled = status;
-            F3WaveCheckBox.IsEnabled = status;
-            FC5WaveCheckBox.IsEnabled = status;
-            T7WaveCheckBox.IsEnabled = status;
-            P7WaveCheckBox.IsEnabled = status;
-            O1WaveCheckBox.IsEnabled = status;
-            O2WaveCheckBox.IsEnabled = status;
-            P8WaveCheckBox.IsEnabled = status;
-            T8WaveCheckBox.IsEnabled = status;
-            FC6WaveCheckBox.IsEnabled = status;
-            F4WaveCheckBox.IsEnabled = status;
-            F8WaveCheckBox.IsEnabled = status;
+            CurrentWaveComboBox.IsEnabled = status;
             AlphaWaveCheckBox.IsEnabled = status;
             BetaWaveCheckBox.IsEnabled = status;
             ThetaWaveCheckBox.IsEnabled = status;
@@ -222,6 +211,17 @@ namespace EEGETAnalysis.GUI
             zedGraphPane.GraphObjList.Add(EEGLine);
 
             ZedGraphRefresh();
+
+            foreach (var item in Enum.GetValues(typeof(Electrode)))
+            {
+                CurrentWaveComboBox.Items.Add(item);
+            }
+        }
+
+        void CurrentWaveComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            CurrentElectrode = (Electrode)((sender as ComboBox).SelectedItem);
+            DrawWaveforms();
         }
 
         /// <summary>
@@ -445,6 +445,7 @@ namespace EEGETAnalysis.GUI
 
                 ZedGraphRefresh();
 
+                CurrentWaveComboBox.SelectedIndex = 0;
                 //OriginalWaveCheckBox.IsChecked = true;
             }
             catch (System.IO.IOException ex)
@@ -460,85 +461,12 @@ namespace EEGETAnalysis.GUI
         {
             graph.PlotClear(1);
 
-            BasicDSP.Waveform waveformT7 = sampler.GetEEGWaveform(Electrode.T7);
-            BasicDSP.Signal signalT7 = waveformT7.Quantise();
-            EEGAnalyzer analyzer = new EEGAnalyzer(waveformT7);
+            BasicDSP.Waveform waveform = sampler.GetEEGWaveform(CurrentElectrode);
+            BasicDSP.Signal signal = waveform.Quantise();
+            EEGAnalyzer analyzer = new EEGAnalyzer(waveform);
 
-            List<Electrode> activeElectrodeWaves = new List<Electrode>();
-
-            if(AF3WaveCheckBox.IsChecked == true)
+            if (OriginalWaveCheckBox.IsChecked == true)
             {
-                activeElectrodeWaves.Add(Electrode.AF3);
-            }
-
-            if(F7WaveCheckBox.IsChecked == true)
-            {
-                activeElectrodeWaves.Add(Electrode.F7);
-            }
-
-            if(F3WaveCheckBox.IsChecked == true)
-            {
-                activeElectrodeWaves.Add(Electrode.F3);
-            }
-
-            if(FC5WaveCheckBox.IsChecked == true)
-            {
-                activeElectrodeWaves.Add(Electrode.FC5);
-            }
-
-            if (T7WaveCheckBox.IsChecked == true)
-            {
-                activeElectrodeWaves.Add(Electrode.T7);
-            }
-
-            if (P7WaveCheckBox.IsChecked == true)
-            {
-                activeElectrodeWaves.Add(Electrode.P7);
-            }
-
-            if (O1WaveCheckBox.IsChecked == true)
-            {
-                activeElectrodeWaves.Add(Electrode.O1);
-            }
-
-            if (O2WaveCheckBox.IsChecked == true)
-            {
-                activeElectrodeWaves.Add(Electrode.O2);
-            }
-
-            if (P8WaveCheckBox.IsChecked == true)
-            {
-                activeElectrodeWaves.Add(Electrode.P8);
-            }
-
-            if (T8WaveCheckBox.IsChecked == true)
-            {
-                activeElectrodeWaves.Add(Electrode.T8);
-            }
-
-            if (FC6WaveCheckBox.IsChecked == true)
-            {
-                activeElectrodeWaves.Add(Electrode.FC6);
-            }
-
-            if (F4WaveCheckBox.IsChecked == true)
-            {
-                activeElectrodeWaves.Add(Electrode.F4);
-            }
-
-            if (F8WaveCheckBox.IsChecked == true)
-            {
-                activeElectrodeWaves.Add(Electrode.F8);
-            }
-
-            if (AF4WaveCheckBox.IsChecked == true)
-            {
-                activeElectrodeWaves.Add(Electrode.AF4);
-            }
-            
-            foreach (Electrode electrode in activeElectrodeWaves)
-            {
-                BasicDSP.Signal signal = sampler.GetEEGWaveform(electrode).Quantise();
                 graph.PlotSignal(1, ref signal, "");
             }
 
