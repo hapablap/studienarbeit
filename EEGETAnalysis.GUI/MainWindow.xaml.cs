@@ -92,23 +92,29 @@ namespace EEGETAnalysis.GUI
         /// <summary>
         /// Graph which is used to paint line chart on the ZedGraphControl
         /// </summary>
-        BasicDSP.Graph graph;
+        BasicDSP.Graph eegGraph;
 
         /// <summary>
         /// ZedGraphControl is used to paint charts. This control is a WinForms control and
         /// implemented by using WindowsFormsIntegration
         /// </summary>
-        ZedGraph.ZedGraphControl zedGraph;
+        ZedGraph.ZedGraphControl eegZedGraph;
 
         /// <summary>
         /// EEGLine object. The EEGLine is used to point the current position on the chart.
         /// </summary>
-        ZedGraph.LineObj EEGLine;
+        ZedGraph.LineObj eegLine;
 
         /// <summary>
         /// ZedGraph Pane
         /// </summary>
         ZedGraph.GraphPane zedGraphPane;
+
+        ZedGraph.ZedGraphControl spectrumZedGraph;
+
+        ZedGraph.GraphPane spectrumGraphPane;
+
+        BasicDSP.Graph spectrumGraph;
 
         /// <summary>
         /// Position of the EEG line.
@@ -116,6 +122,8 @@ namespace EEGETAnalysis.GUI
         double EEGLineXPosition = 0;
 
         Electrode CurrentElectrode;
+
+        Electrode CurrentSpectrumElectrode;
 
         /// <summary>
         /// Window construct. Initialize componentes and events.
@@ -163,6 +171,7 @@ namespace EEGETAnalysis.GUI
             StopButton.IsEnabled = status;
             RewindButton.IsEnabled = status;
             CurrentWaveComboBox.IsEnabled = status;
+            OriginalWaveCheckBox.IsEnabled = status;
             AlphaWaveCheckBox.IsEnabled = status;
             BetaWaveCheckBox.IsEnabled = status;
             ThetaWaveCheckBox.IsEnabled = status;
@@ -198,23 +207,38 @@ namespace EEGETAnalysis.GUI
             eyePoint.Visibility = Visibility.Hidden;
 
             System.Windows.Forms.Integration.WindowsFormsHost host = new System.Windows.Forms.Integration.WindowsFormsHost();
-            zedGraph = new ZedGraph.ZedGraphControl();
-            zedGraph.IsEnableZoom = false;
-            host.Child = zedGraph;
+            eegZedGraph = new ZedGraph.ZedGraphControl();
+            eegZedGraph.IsEnableZoom = false;
+            // http://goorman.free.fr/ZedGraph/zedgraph.org/wiki/indexa9f9.html?title=Edit_Points_by_Dragging_the_Mouse
+            //zedGraph.MouseDownEvent += zedGraph_MouseDownEvent;
+            host.Child = eegZedGraph;
             EEGGrid.Children.Add(host);
 
-            graph = new BasicDSP.Graph(zedGraph.CreateGraphics(), zedGraph);
+            eegGraph = new BasicDSP.Graph(eegZedGraph.CreateGraphics(), eegZedGraph);
 
-            zedGraphPane = zedGraph.GraphPane;
-            EEGLine = new ZedGraph.LineObj(System.Drawing.Color.Red, EEGLineXPosition, zedGraphPane.YAxis.Scale.Min, EEGLineXPosition, zedGraphPane.YAxis.Scale.Max);
-            EEGLine.Line.Width = 1f;
-            zedGraphPane.GraphObjList.Add(EEGLine);
+            zedGraphPane = eegZedGraph.GraphPane;
+            eegLine = new ZedGraph.LineObj(System.Drawing.Color.Red, EEGLineXPosition, zedGraphPane.YAxis.Scale.Min, EEGLineXPosition, zedGraphPane.YAxis.Scale.Max);
+            eegLine.Line.Width = 1f;
+            zedGraphPane.GraphObjList.Add(eegLine);
 
-            ZedGraphRefresh();
+            EEGZedGraphRefresh();
+
+            System.Windows.Forms.Integration.WindowsFormsHost spectrumZedGraphHost = new System.Windows.Forms.Integration.WindowsFormsHost();
+            spectrumZedGraph = new ZedGraph.ZedGraphControl();
+            spectrumZedGraph.IsEnableZoom = false;
+            spectrumZedGraphHost.Child = spectrumZedGraph;
+            SpectrumGrid.Children.Add(spectrumZedGraphHost);
+
+            spectrumGraph = new BasicDSP.Graph(spectrumZedGraph.CreateGraphics(), spectrumZedGraph);
+
+            spectrumGraphPane = spectrumZedGraph.GraphPane;
+
+            SpectrumZedGraphRefresh();
 
             foreach (var item in Enum.GetValues(typeof(Electrode)))
             {
                 CurrentWaveComboBox.Items.Add(item);
+                CurrentSpectrumComboBox.Items.Add(item);
             }
         }
 
@@ -227,9 +251,9 @@ namespace EEGETAnalysis.GUI
         /// <summary>
         /// Draw the EEGData. Refresh is called when CheckBox are checked or unchecked.
         /// </summary>
-        private void ZedGraphRefresh()
+        private void EEGZedGraphRefresh()
         {
-            ZedGraph.GraphPane myPane = zedGraph.GraphPane;
+            ZedGraph.GraphPane myPane = eegZedGraph.GraphPane;
             System.Drawing.Color tmpColor = System.Drawing.Color.Blue;
 
             for (int i = 0; i < myPane.CurveList.Count; i++)
@@ -263,7 +287,46 @@ namespace EEGETAnalysis.GUI
             myPane.YAxis.Scale.FontSpec.Size = chartFontSize;
             myPane.YAxis.Title.FontSpec.Size = chartFontSize;
             myPane.Title.Text = " ";
-            zedGraph.Refresh();
+            eegZedGraph.Refresh();
+        }
+
+        private void SpectrumZedGraphRefresh()
+        {
+            ZedGraph.GraphPane myPane = spectrumZedGraph.GraphPane;
+            System.Drawing.Color tmpColor = System.Drawing.Color.Blue;
+
+            for (int i = 0; i < myPane.CurveList.Count; i++)
+            {
+                switch (i)
+                {
+                    case 1:
+                        tmpColor = System.Drawing.Color.Red;
+                        break;
+                    case 2:
+                        tmpColor = System.Drawing.Color.Green;
+                        break;
+                    case 3:
+                        tmpColor = System.Drawing.Color.DarkMagenta;
+                        break;
+                    case 4:
+                        tmpColor = System.Drawing.Color.Orange;
+                        break;
+                    case 5:
+                        tmpColor = System.Drawing.Color.Brown;
+                        break;
+                    default:
+                        break;
+                }
+
+                myPane.CurveList[i].Color = tmpColor;
+            }
+
+            myPane.XAxis.Scale.FontSpec.Size = chartFontSize;
+            myPane.XAxis.Title.FontSpec.Size = chartFontSize;
+            myPane.YAxis.Scale.FontSpec.Size = chartFontSize;
+            myPane.YAxis.Title.FontSpec.Size = chartFontSize;
+            myPane.Title.Text = " ";
+            spectrumZedGraph.Refresh();
         }
 
         /// <summary>
@@ -276,17 +339,7 @@ namespace EEGETAnalysis.GUI
         {
             // Synchronize slider position with video
             Slider.Value = mp.Position.TotalSeconds;
-
-            // Calculate the current video position in percent. This value is used
-            // for different calculations
-            currentVideoPositionInPercent = mp.Position.Seconds / mediaDuration;
             
-            // protection, do not go higher then 100%
-            if (currentVideoPositionInPercent > 100)
-            {
-                currentVideoPositionInPercent = 100;
-            }
-
             currentDataIndex = (int)(samples.Count * currentVideoPositionInPercent);
 
             // first row contains identifier, skip it
@@ -340,11 +393,11 @@ namespace EEGETAnalysis.GUI
         {
             EEGLineXPosition = (Convert.ToDouble(mp.Position.Milliseconds) * 0.001) + Convert.ToDouble(mp.Position.Seconds);
 
-            zedGraphPane.GraphObjList.Remove(EEGLine);
-            EEGLine = new ZedGraph.LineObj(System.Drawing.Color.Red, EEGLineXPosition, zedGraphPane.YAxis.Scale.Min, EEGLineXPosition, zedGraphPane.YAxis.Scale.Max);
-            EEGLine.Line.Width = 1f;
-            zedGraphPane.GraphObjList.Add(EEGLine);
-            zedGraph.Refresh();
+            zedGraphPane.GraphObjList.Remove(eegLine);
+            eegLine = new ZedGraph.LineObj(System.Drawing.Color.Red, EEGLineXPosition, zedGraphPane.YAxis.Scale.Min, EEGLineXPosition, zedGraphPane.YAxis.Scale.Max);
+            eegLine.Line.Width = 1f;
+            zedGraphPane.GraphObjList.Add(eegLine);
+            eegZedGraph.Refresh();
         }
 
         /// <summary>
@@ -355,6 +408,20 @@ namespace EEGETAnalysis.GUI
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             mp.Position = TimeSpan.FromSeconds(Slider.Value);
+            
+            // Calculate the current video position in percent. This value is used
+            // for different calculations
+            currentVideoPositionInPercent = mp.Position.Seconds / mediaDuration;
+
+            // protection, do not go higher then 100%
+            if (currentVideoPositionInPercent > 100)
+            {
+                currentVideoPositionInPercent = 100;
+            }
+
+            DrawSpectrum();
+            
+            TimeTextBlock.Text = String.Format("{0:00}", mp.Position.Hours) + ":" + String.Format("{0:00}", mp.Position.Minutes) + ":" + String.Format("{0:00}", mp.Position.Seconds);
         }
 
         /// <summary>
@@ -441,12 +508,15 @@ namespace EEGETAnalysis.GUI
 
                 ResetButton.IsEnabled = true;
 
-                graph.PlotClear(1);
+                eegGraph.PlotClear(1);
 
-                ZedGraphRefresh();
+                EEGZedGraphRefresh();
 
                 CurrentWaveComboBox.SelectedIndex = 0;
-                //OriginalWaveCheckBox.IsChecked = true;
+                CurrentSpectrumComboBox.SelectedIndex = 0;
+                OriginalWaveCheckBox.IsChecked = true;
+
+                DrawSpectrum();
             }
             catch (System.IO.IOException ex)
             {
@@ -454,12 +524,28 @@ namespace EEGETAnalysis.GUI
             }
         }
 
+        private void DrawSpectrum()
+        {
+            spectrumGraph.PlotClear(1);
+
+            BasicDSP.Waveform waveform = sampler.GetEEGWaveform(CurrentSpectrumElectrode);
+            BasicDSP.Signal signal = waveform.Quantise();
+            EEGAnalyzer analyzer = new EEGAnalyzer(waveform);
+
+            int spectrumIndex = Convert.ToInt32(Convert.ToDouble(analyzer.Waveform.Count) * currentVideoPositionInPercent);
+
+            BasicDSP.Spectrum spectrum = analyzer.GetSpectrum(spectrumIndex, 100);
+            spectrumGraph.PlotDbSpectrum(1, ref spectrum, "");
+
+            SpectrumZedGraphRefresh();
+        }
+
         /// <summary>
-        /// Draw waveforms on ZedGraph depending on which CheckBoxes are selected.
+        /// Draw waveforms on ZedGraph depending on which one is selected.
         /// </summary>
         private void DrawWaveforms()
         {
-            graph.PlotClear(1);
+            eegGraph.PlotClear(1);
 
             BasicDSP.Waveform waveform = sampler.GetEEGWaveform(CurrentElectrode);
             BasicDSP.Signal signal = waveform.Quantise();
@@ -467,36 +553,34 @@ namespace EEGETAnalysis.GUI
 
             if (OriginalWaveCheckBox.IsChecked == true)
             {
-                graph.PlotSignal(1, ref signal, "");
+                eegGraph.PlotSignal(1, ref signal, "");
             }
 
-            if(AlphaWaveCheckBox.IsChecked == true)
+            if (AlphaWaveCheckBox.IsChecked == true)
             {
                 BasicDSP.Signal waveformAlpha = analyzer.FilterBand(EEGBand.ALPHA).Quantise();
-                graph.PlotSignal(1, ref waveformAlpha, "");
-                //BasicDSP.Waveform spectrum = analyzer.GetAmplitudeSpectrum(50, 128);
-                //graph.PlotWaveform(1, ref spectrum, "");
+                eegGraph.PlotSignal(1, ref waveformAlpha, "");
             }
 
             if (BetaWaveCheckBox.IsChecked == true)
             {
                 BasicDSP.Signal waveformBeta = analyzer.FilterBand(EEGBand.BETA).Quantise();
-                graph.PlotSignal(1, ref waveformBeta, "");
+                eegGraph.PlotSignal(1, ref waveformBeta, "");
             }
 
             if (ThetaWaveCheckBox.IsChecked == true)
             {
                 BasicDSP.Signal waveformTheta = analyzer.FilterBand(EEGBand.THETA).Quantise();
-                graph.PlotSignal(1, ref waveformTheta, "");
+                eegGraph.PlotSignal(1, ref waveformTheta, "");
             }
 
             if (DeltaWaveCheckBox.IsChecked == true)
             {
                 BasicDSP.Signal waveformDelta = analyzer.FilterBand(EEGBand.DELTA).Quantise();
-                graph.PlotSignal(1, ref waveformDelta, "");
+                eegGraph.PlotSignal(1, ref waveformDelta, "");
             }
 
-            ZedGraphRefresh();
+            EEGZedGraphRefresh();
         }
 
         /// <summary>
@@ -534,8 +618,8 @@ namespace EEGETAnalysis.GUI
         private void ResetButton_Click(object sender, RoutedEventArgs e)
         {
             mp.Close();
-            graph.PlotClear(1);
-            zedGraph.Refresh();
+            eegGraph.PlotClear(1);
+            eegZedGraph.Refresh();
             Slider.Value = 0;
             SetControlButtonsEnabled(false);
             CsvFilePathTextBox.Text = null;
@@ -606,6 +690,12 @@ namespace EEGETAnalysis.GUI
         private void EEGWaveCheckBox_CheckedOrUnchecked(object sender, RoutedEventArgs e)
         {
             DrawWaveforms();
+        }
+
+        private void CurrentSpectrumComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            CurrentSpectrumElectrode = (Electrode)((sender as ComboBox).SelectedItem);
+            DrawSpectrum();
         }
     }
 }

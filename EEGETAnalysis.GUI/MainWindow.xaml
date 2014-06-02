@@ -39,13 +39,13 @@
         </GroupBox>
         <Canvas x:Name="MediaCanvas" Grid.Row="1"></Canvas>
         <GroupBox Grid.Row="2" Header="EEG Data">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="50"/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <TabControl>
-                    <TabItem Header="EEG Wellen">
+            <TabControl x:Name="EEGDataTabControl">
+                <TabItem Header="EEG Wellen">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <ComboBox x:Name="CurrentWaveComboBox" Margin="0,0,15,0" SelectionChanged="CurrentWaveComboBox_SelectionChanged" Width="100"></ComboBox>
                             <CheckBox x:Name="OriginalWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,3,15,0">Original Welle</CheckBox>
@@ -54,16 +54,25 @@
                             <CheckBox x:Name="ThetaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,3,15,0">Theta</CheckBox>
                             <CheckBox x:Name="DeltaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,3,15,0">Delta</CheckBox>
                         </StackPanel>
-                    </TabItem>
-                    <TabItem Header="Spektren">
+                        <Grid Name="EEGGrid" Grid.Row="1"></Grid>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Spektrum">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <ComboBox x:Name="CurrentSpectrumComboBox" Margin="0,0,15,0" SelectionChanged="CurrentSpectrumComboBox_SelectionChanged" Width="100"></ComboBox>
+                        </StackPanel>
+                        <Grid Name="SpectrumGrid" Grid.Row="1"></Grid>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Emotion">
 
-                    </TabItem>
-                    <TabItem Header="Emotionen">
-
-                    </TabItem>
-                </TabControl>
-                <Grid Name="EEGGrid" Grid.Row="1"></Grid>
-            </Grid>
+                </TabItem>
+            </TabControl>
         </GroupBox>
         <GroupBox Grid.Row="3" Header="Controls">
             <Grid>
@@ -73,12 +82,16 @@
                     <ColumnDefinition Width="60"/>
                     <ColumnDefinition Width="60"/>
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="55"/>
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="0" x:Name="PlayButton" Click="PlayButton_Click">Play</Button>
                 <Button Grid.Column="1" x:Name="PauseButton" Click="PauseButton_Click">Pause</Button>
                 <Button Grid.Column="2" x:Name="StopButton" Click="StopButton_Click">Stop</Button>
                 <Button Grid.Column="3" x:Name="RewindButton" Click="RewindButton_Click">Rewind</Button>
                 <Slider Grid.Column="4" x:Name="Slider" VerticalAlignment="Center" Margin="10,0,10,0" ValueChanged="Slider_ValueChanged"/>
+                <StackPanel Orientation="Vertical" VerticalAlignment="Center" Grid.Column="5">
+                    <TextBlock x:Name="TimeTextBlock">00:00:00</TextBlock>
+                </StackPanel>
             </Grid>
         </GroupBox>
     </Grid>
