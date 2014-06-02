@@ -13,10 +13,13 @@ namespace EEGETAnalysis.Library
         public Waveform Waveform { get; private set; }
         double sampleRate;
 
+        public Dictionary<EEGBand, Waveform> Activity;
+
         public EEGAnalyzer(Waveform Waveform)
         {
             this.Waveform = Waveform;
             this.sampleRate = Waveform.Rate;
+            CalculateActivity();
         }
 
         /// <summary>
@@ -79,53 +82,54 @@ namespace EEGETAnalysis.Library
             return magnitudeWaveform;
         }
 
-
         /// <summary>
-        /// Generiert eine Waveform, die die sekündliche Aktivität eines EEG-Frequenzbandes wiederspiegelt.
+        /// Generiert eine Waveform, die die sekündliche Aktivität eines EEG-Frequenzbandes wiederspiegelt. Die Samplerate ist 1 Hz.
         /// </summary>
-        /// <param name="eegBand">zu analysierendes EEG-Frequenzband</param>
-        /// <returns>Waveform mit der Aktivität über die Zeit. Die Samplerate ist 1 Hz.</returns>
-        public Waveform GetActivity(EEGBand eegBand)
+        private void CalculateActivity()
         {
-
-            double minFreq = eegBand.GetMinFreq();
-            double maxFreq = eegBand.GetMaxFreq();
-
-            // wir nehmen das Spektrum der letzen 2 Sekunden
-            int retrospectionCount = (int) sampleRate * 2;
-
-            // die Samplerate der Activity-Waveform soll 1 Hz sein.
-            int activitySampleRate = 1;
-
-            // finde die Indizes im diskreten Spektrum, die Ober- und Unterkante des Frequenzbands darstellen
-            int minFreqIndex = EEGUtils.FindSpectrumIndexForFreq(minFreq, retrospectionCount / 2, (int) sampleRate);
-            int maxFreqIndex = EEGUtils.FindSpectrumIndexForFreq(maxFreq, retrospectionCount / 2, (int) sampleRate);
-
-            // wir benötigen eine leere Waveform
-            Waveform activityWaveform = new Waveform(0, activitySampleRate);
-
-            // Ermittle das Frequenzspektrum in regelmäßigen Abständen  und berechne die Aktivität im Frequenzband
-            for (int i = Waveform.First; i <= Waveform.Last - retrospectionCount; i = i + ((int) sampleRate / activitySampleRate))
+            this.Activity = new Dictionary<EEGBand, Waveform>();
+            foreach (EEGBand eegBand in (EEGBand[])Enum.GetValues(typeof(EEGBand)))
             {
-                Waveform amplitudeSpectrum = GetAmplitudeSpectrum(i, retrospectionCount);
-                double activityValue = 0;
-                for (int j = minFreqIndex; j <= maxFreqIndex; j++)
+                double minFreq = eegBand.GetMinFreq();
+                double maxFreq = eegBand.GetMaxFreq();
+
+                // wir nehmen das Spektrum der letzen 2 Sekunden
+                int retrospectionCount = (int)sampleRate * 2;
+
+                // die Samplerate der Activity-Waveform soll 1 Hz sein.
+                int activitySampleRate = 1;
+
+                // finde die Indizes im diskreten Spektrum, die Ober- und Unterkante des Frequenzbands darstellen
+                int minFreqIndex = EEGUtils.FindSpectrumIndexForFreq(minFreq, retrospectionCount / 2, (int)sampleRate);
+                int maxFreqIndex = EEGUtils.FindSpectrumIndexForFreq(maxFreq, retrospectionCount / 2, (int)sampleRate);
+
+                // wir benötigen eine leere Waveform
+                Waveform activityWaveform = new Waveform(0, activitySampleRate);
+
+                // Ermittle das Frequenzspektrum in regelmäßigen Abständen  und berechne die Aktivität im Frequenzband
+                for (int i = Waveform.First; i <= Waveform.Last - retrospectionCount; i = i + ((int)sampleRate / activitySampleRate))
                 {
-                    activityValue = activityValue + amplitudeSpectrum[j];
+                    Waveform amplitudeSpectrum = GetAmplitudeSpectrum(i, retrospectionCount);
+                    double activityValue = 0;
+                    for (int j = minFreqIndex; j <= maxFreqIndex; j++)
+                    {
+                        activityValue = activityValue + amplitudeSpectrum[j];
+                    }
+                    activityWaveform.Add(activityValue / (maxFreqIndex - minFreqIndex + 1));
                 }
-                activityWaveform.Add(activityValue / (maxFreqIndex - minFreqIndex + 1));
+
+                // Die Waveform ist etwas zu kurz und die Werte beziehen sich jeweils auf zwei Sekunden später
+                // Kompensieren, indem die Welle nach hinten verschoben wird und die ersten Werte denselben Wert annehmen
+                Waveform compensationWaveform = new Waveform(0, activitySampleRate);
+                for (int i = 0; i <= retrospectionCount; i = i + ((int)sampleRate / activitySampleRate))
+                {
+                    compensationWaveform.Add(activityWaveform[activityWaveform.First]);
+                }
+                this.Activity.Add(eegBand, EEGUtils.Concatenate(compensationWaveform, activityWaveform));
             }
 
-            // Die Waveform ist etwas zu kurz und die Werte beziehen sich jeweils auf zwei Sekunden später
-            // Kompensieren, indem die Welle nach hinten verschoben wird und die ersten Werte denselben Wert annehmen
-            Waveform compensationWaveform = new Waveform(0, activitySampleRate);
-            for (int i = 0; i <= retrospectionCount; i = i + ((int)sampleRate / activitySampleRate))
-            {
-                compensationWaveform.Add(activityWaveform[activityWaveform.First]);
-            }
-            return EEGUtils.Concatenate(compensationWaveform, activityWaveform);
+           
         }
-
 
     }
 }

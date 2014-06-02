@@ -14,6 +14,11 @@ namespace EEGETAnalysis.Library
 
         public Dictionary<Electrode, EEGAnalyzer> Analyzers { get; private set; }
 
+        public Dictionary<EEGBand, Waveform> AverageActivity { get; private set; }
+
+        public Dictionary<Emotion, Waveform> Emotions { get; private set; }
+
+
         public EEGEmotionizer(Sampler sampler)
         {
             this.sampler = sampler;
@@ -25,34 +30,40 @@ namespace EEGETAnalysis.Library
             {
                 Analyzers.Add(eegWaveform.Key, new EEGAnalyzer(eegWaveform.Value));
             }
+
+            CalculateAverageActivity();
+            CalculateEmotions();
         }
 
+
         /// <summary>
-        /// Bildet den Durschnitt der Frequenzbandaktivität aus allen verfügbaren Elektroden.
+        /// Bildet den Durchschnitt der Frequenzbandaktivität aus allen verfügbaren Elektroden und speichert ihn zwischen.
         /// </summary>
-        /// <param name="eegBand">Das Frequenzband, für welches der Durchschnitt berechnet werden soll.</param>
-        /// <returns>Eine Waveform mit dem zeitlichen Verlauf der Aktivität im angegbenen Frequenzband.</returns>
-        public Waveform GetAverageActivity(EEGBand eegBand)
+        private void CalculateAverageActivity()
         {
-            List<Waveform> waveforms = new List<Waveform>();
-            foreach (KeyValuePair<Electrode, EEGAnalyzer> analyzer in Analyzers)
+            AverageActivity = new Dictionary<EEGBand, Waveform>();
+            foreach (EEGBand eegBand in (EEGBand[])Enum.GetValues(typeof(EEGBand)))
             {
-                waveforms.Add(analyzer.Value.GetActivity(eegBand));
+                List<Waveform> waveforms = new List<Waveform>();
+                foreach (KeyValuePair<Electrode, EEGAnalyzer> analyzer in Analyzers)
+                {
+                    waveforms.Add(analyzer.Value.Activity[eegBand]);
+                }
+                AverageActivity.Add(eegBand, EEGUtils.AverageWaveform(waveforms));
             }
-            return EEGUtils.AverageWaveform(waveforms);
+            
         }
-
+  
 
         /// <summary>
-        /// Berechnet aus der Aktivität der Frequenzbänder die Ausprägung der Basisemotionen im zeitlichen Verlauf.
+        /// Berechnet aus der Aktivität der Frequenzbänder die Ausprägung der Basisemotionen im zeitlichen Verlauf und speichert ihn zwischen.
         /// </summary>
-        /// <returns>Dicitonary, das den Emotionen eine Waveform zuordnet. Die Waveforms stellen den zeitlichen Verlauf der Emotionen dar.</returns>
-        public Dictionary<Emotion, Waveform> GetEmotions()
+        private void CalculateEmotions()
         {
-            Waveform alphaAcitvity = EEGUtils.Quantize(GetAverageActivity(EEGBand.ALPHA));
-            Waveform betaActivity = EEGUtils.Quantize(GetAverageActivity(EEGBand.BETA));
-            Waveform thetaActivity = EEGUtils.Quantize(GetAverageActivity(EEGBand.THETA));
-            Waveform deltaActivity = EEGUtils.Quantize(GetAverageActivity(EEGBand.DELTA));
+            Waveform alphaAcitvity = EEGUtils.Quantize(AverageActivity[EEGBand.ALPHA]);
+            Waveform betaActivity = EEGUtils.Quantize(AverageActivity[EEGBand.BETA]);
+            Waveform thetaActivity = EEGUtils.Quantize(AverageActivity[EEGBand.THETA]);
+            Waveform deltaActivity = EEGUtils.Quantize(AverageActivity[EEGBand.DELTA]);
 
             Dictionary<Emotion, Waveform> emotions = new Dictionary<Emotion, Waveform>();
             emotions.Add(Emotion.FEAR, new Waveform(0, 1));
@@ -95,7 +106,7 @@ namespace EEGETAnalysis.Library
             emotions[Emotion.RAGE] = EEGUtils.Quantize(emotions[Emotion.RAGE]);
             emotions[Emotion.SORROW] = EEGUtils.Quantize(emotions[Emotion.SORROW]);
 
-            return emotions;
+            this.Emotions = emotions;
 
         }
 
