@@ -87,16 +87,19 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         double eyeY = 0;
 
+        /// <summary>
+        /// Sample rate which was used for the measure. Value is loaded from CSV file.
+        /// </summary>
         int sampleRate;
 
         /// <summary>
-        /// Graph which is used to paint line chart on the ZedGraphControl
+        /// Graph which is used to paint line chart of the EEG
         /// </summary>
         BasicDSP.Graph eegGraph;
 
         /// <summary>
-        /// ZedGraphControl is used to paint charts. This control is a WinForms control and
-        /// implemented by using WindowsFormsIntegration
+        /// ZedGraphControl is used to paint EEG. This control is a WinForms control and
+        /// implemented by using WindowsFormsIntegration.
         /// </summary>
         ZedGraph.ZedGraphControl eegZedGraph;
 
@@ -106,24 +109,53 @@ namespace EEGETAnalysis.GUI
         ZedGraph.LineObj eegLine;
 
         /// <summary>
-        /// ZedGraph Pane
+        /// ZedGraph Pane for EEG
         /// </summary>
         ZedGraph.GraphPane zedGraphPane;
 
+        BasicDSP.Graph emotionGraph;
+
+        ZedGraph.ZedGraphControl emotionZedGraph;
+
+        ZedGraph.LineObj emotionLine;
+
+        ZedGraph.GraphPane emotionGraphPane;
+
+        /// <summary>
+        /// ZedGraphControl is used to paint spectrum. This control is a WinForms control and
+        /// implemented by using WindowsFormsIntegration.
+        /// </summary>
         ZedGraph.ZedGraphControl spectrumZedGraph;
 
+        /// <summary>
+        /// ZedGraph Pane for spectrum
+        /// </summary>
         ZedGraph.GraphPane spectrumGraphPane;
 
+        /// <summary>
+        /// Graph which is used to paint line chart of the spectrum
+        /// </summary>
         BasicDSP.Graph spectrumGraph;
 
         /// <summary>
         /// Position of the EEG line.
         /// </summary>
-        double EEGLineXPosition = 0;
+        double eegLineXPosition = 0;
 
-        Electrode CurrentElectrode;
+        /// <summary>
+        /// Current electrode which is selected for the EEG.
+        /// </summary>
+        Electrode currentElectrode;
 
-        Electrode CurrentSpectrumElectrode;
+        /// <summary>
+        /// Current electrode which is selected for the spectrum.
+        /// </summary>
+        Electrode currentSpectrumElectrode;
+
+        /// <summary>
+        /// Emotionizer object.
+        /// </summary>
+        EEGEmotionizer emotionizer = null;
 
         /// <summary>
         /// Window construct. Initialize componentes and events.
@@ -206,6 +238,7 @@ namespace EEGETAnalysis.GUI
 
             eyePoint.Visibility = Visibility.Hidden;
 
+            // EEG Graph (BEGIN)
             System.Windows.Forms.Integration.WindowsFormsHost host = new System.Windows.Forms.Integration.WindowsFormsHost();
             eegZedGraph = new ZedGraph.ZedGraphControl();
             eegZedGraph.IsEnableZoom = false;
@@ -217,12 +250,31 @@ namespace EEGETAnalysis.GUI
             eegGraph = new BasicDSP.Graph(eegZedGraph.CreateGraphics(), eegZedGraph);
 
             zedGraphPane = eegZedGraph.GraphPane;
-            eegLine = new ZedGraph.LineObj(System.Drawing.Color.Red, EEGLineXPosition, zedGraphPane.YAxis.Scale.Min, EEGLineXPosition, zedGraphPane.YAxis.Scale.Max);
+            eegLine = new ZedGraph.LineObj(System.Drawing.Color.Red, eegLineXPosition, zedGraphPane.YAxis.Scale.Min, eegLineXPosition, zedGraphPane.YAxis.Scale.Max);
             eegLine.Line.Width = 1f;
             zedGraphPane.GraphObjList.Add(eegLine);
 
             EEGZedGraphRefresh();
+            // EEG Graph (END)
 
+            // Emotion Graph (BEGIN)
+            System.Windows.Forms.Integration.WindowsFormsHost emotionHost = new System.Windows.Forms.Integration.WindowsFormsHost();
+            emotionZedGraph = new ZedGraph.ZedGraphControl();
+            emotionZedGraph.IsEnableZoom = false;
+            emotionHost.Child = emotionZedGraph;
+            EmotionGrid.Children.Add(emotionHost);
+
+            emotionGraph = new BasicDSP.Graph(emotionZedGraph.CreateGraphics(), emotionZedGraph);
+
+            emotionGraphPane = emotionZedGraph.GraphPane;
+            emotionLine = new ZedGraph.LineObj(System.Drawing.Color.Red, eegLineXPosition, emotionGraphPane.YAxis.Scale.Min, eegLineXPosition, emotionGraphPane.YAxis.Scale.Max);
+            emotionLine.Line.Width = 1f;
+            emotionGraphPane.GraphObjList.Add(emotionLine);
+
+            EmotionZedGraphRefresh();
+            // Emotion Graph (END)
+
+            // Spectrum Graph (BEGIN)
             System.Windows.Forms.Integration.WindowsFormsHost spectrumZedGraphHost = new System.Windows.Forms.Integration.WindowsFormsHost();
             spectrumZedGraph = new ZedGraph.ZedGraphControl();
             spectrumZedGraph.IsEnableZoom = false;
@@ -234,7 +286,9 @@ namespace EEGETAnalysis.GUI
             spectrumGraphPane = spectrumZedGraph.GraphPane;
 
             SpectrumZedGraphRefresh();
+            // Spectrum Graph (END)
 
+            // Add electrodes to combo box (EEG and spectrum)
             foreach (var item in Enum.GetValues(typeof(Electrode)))
             {
                 CurrentWaveComboBox.Items.Add(item);
@@ -242,14 +296,76 @@ namespace EEGETAnalysis.GUI
             }
         }
 
+        /// <summary>
+        /// ComboBox selection changed for the current EEG electrode.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void CurrentWaveComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            CurrentElectrode = (Electrode)((sender as ComboBox).SelectedItem);
+            currentElectrode = (Electrode)((sender as ComboBox).SelectedItem);
             DrawWaveforms();
         }
 
         /// <summary>
-        /// Draw the EEGData. Refresh is called when CheckBox are checked or unchecked.
+        /// Draw emotion line graph with different line colors.
+        /// </summary>
+        private void EmotionZedGraphRefresh()
+        {
+            ZedGraph.GraphPane myPane = emotionZedGraph.GraphPane;
+            System.Drawing.Color tmpColor = System.Drawing.Color.Blue;
+            Brush tmpBrush = Brushes.Blue;
+            string text = "";
+            Thickness margin = new Thickness() { Left = 5, Right = 5 };
+
+            if (emotionizer != null)
+            {
+                int i = 0;
+                foreach (KeyValuePair<Emotion, BasicDSP.Waveform> emotion in emotionizer.Emotions)
+                {
+                    switch (emotion.Key)
+                    {
+                        case Emotion.RAGE:
+                            tmpColor = System.Drawing.Color.Red;
+                            tmpBrush = Brushes.Red;
+                            text = "Wut";
+                            break;
+                        case Emotion.JOY:
+                            tmpColor = System.Drawing.Color.Green;
+                            tmpBrush = Brushes.Green;
+                            text = "Freude";
+                            break;
+                        case Emotion.SORROW:
+                            tmpColor = System.Drawing.Color.DarkMagenta;
+                            tmpBrush = Brushes.DarkMagenta;
+                            text = "Trauer";
+                            break;
+                        case Emotion.FEAR:
+                            tmpColor = System.Drawing.Color.Orange;
+                            tmpBrush = Brushes.Orange;
+                            text = "Angst";
+                            break;
+                        default:
+                            break;
+                    }
+
+                    TextBlock textBlock = new TextBlock() { Text = text, Foreground = tmpBrush, Margin = margin };
+                    EmotionStackPanel.Children.Add(textBlock);
+                    myPane.CurveList[i].Color = tmpColor;
+                    i++;
+                }
+            }
+
+            myPane.XAxis.Scale.FontSpec.Size = chartFontSize;
+            myPane.XAxis.Title.FontSpec.Size = chartFontSize;
+            myPane.YAxis.Scale.FontSpec.Size = chartFontSize;
+            myPane.YAxis.Title.FontSpec.Size = chartFontSize;
+            myPane.Title.Text = " ";
+            emotionZedGraph.Refresh();
+        }
+
+        /// <summary>
+        /// Draw the EEGData. Refresh is called when current electrode is changed.
         /// </summary>
         private void EEGZedGraphRefresh()
         {
@@ -290,36 +406,12 @@ namespace EEGETAnalysis.GUI
             eegZedGraph.Refresh();
         }
 
+        /// <summary>
+        /// Set font size for the spectrum zed graph
+        /// </summary>
         private void SpectrumZedGraphRefresh()
         {
             ZedGraph.GraphPane myPane = spectrumZedGraph.GraphPane;
-            System.Drawing.Color tmpColor = System.Drawing.Color.Blue;
-
-            for (int i = 0; i < myPane.CurveList.Count; i++)
-            {
-                switch (i)
-                {
-                    case 1:
-                        tmpColor = System.Drawing.Color.Red;
-                        break;
-                    case 2:
-                        tmpColor = System.Drawing.Color.Green;
-                        break;
-                    case 3:
-                        tmpColor = System.Drawing.Color.DarkMagenta;
-                        break;
-                    case 4:
-                        tmpColor = System.Drawing.Color.Orange;
-                        break;
-                    case 5:
-                        tmpColor = System.Drawing.Color.Brown;
-                        break;
-                    default:
-                        break;
-                }
-
-                myPane.CurveList[i].Color = tmpColor;
-            }
 
             myPane.XAxis.Scale.FontSpec.Size = chartFontSize;
             myPane.XAxis.Title.FontSpec.Size = chartFontSize;
@@ -381,9 +473,9 @@ namespace EEGETAnalysis.GUI
             eyePoint.Margin = new Thickness(eyeX, eyeY, 0, 0);
             // Eye tracking (END)
 
-            // EEG data (BEGIN)
+            eegLineXPosition = (Convert.ToDouble(mp.Position.Milliseconds) * 0.001) + Convert.ToDouble(mp.Position.Seconds);
             DrawEEGLine();
-            // EEG data (END)
+            DrawEmotionLine();
         }
 
         /// <summary>
@@ -391,13 +483,23 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         private void DrawEEGLine()
         {
-            EEGLineXPosition = (Convert.ToDouble(mp.Position.Milliseconds) * 0.001) + Convert.ToDouble(mp.Position.Seconds);
-
             zedGraphPane.GraphObjList.Remove(eegLine);
-            eegLine = new ZedGraph.LineObj(System.Drawing.Color.Red, EEGLineXPosition, zedGraphPane.YAxis.Scale.Min, EEGLineXPosition, zedGraphPane.YAxis.Scale.Max);
+            eegLine = new ZedGraph.LineObj(System.Drawing.Color.Red, eegLineXPosition, zedGraphPane.YAxis.Scale.Min, eegLineXPosition, zedGraphPane.YAxis.Scale.Max);
             eegLine.Line.Width = 1f;
             zedGraphPane.GraphObjList.Add(eegLine);
             eegZedGraph.Refresh();
+        }
+
+        /// <summary>
+        /// Draw the Emotion Line on the right position depending on the video position
+        /// </summary>
+        private void DrawEmotionLine()
+        {
+            emotionGraphPane.GraphObjList.Remove(emotionLine);
+            emotionLine = new ZedGraph.LineObj(System.Drawing.Color.Red, eegLineXPosition, emotionGraphPane.YAxis.Scale.Min, eegLineXPosition, emotionGraphPane.YAxis.Scale.Max);
+            emotionLine.Line.Width = 1f;
+            emotionGraphPane.GraphObjList.Add(emotionLine);
+            emotionZedGraph.Refresh();
         }
 
         /// <summary>
@@ -499,6 +601,7 @@ namespace EEGETAnalysis.GUI
                 sampleRate = Convert.ToInt32(parser.GetMetaDataDictionary().GetValue("Sample Rate"));
 
                 sampler = new Sampler(csvData, sampleRate);
+                emotionizer = new EEGEmotionizer(sampler);
                 samples = sampler.GetAllGoodSamples();
 
                 SetControlButtonsEnabled(true);
@@ -517,6 +620,7 @@ namespace EEGETAnalysis.GUI
                 OriginalWaveCheckBox.IsChecked = true;
 
                 DrawSpectrum();
+                DrawEmotions();
             }
             catch (System.IO.IOException ex)
             {
@@ -524,11 +628,14 @@ namespace EEGETAnalysis.GUI
             }
         }
 
+        /// <summary>
+        /// Draw spectrum on ZedGraph
+        /// </summary>
         private void DrawSpectrum()
         {
             spectrumGraph.PlotClear(1);
 
-            BasicDSP.Waveform waveform = sampler.GetEEGWaveform(CurrentSpectrumElectrode);
+            BasicDSP.Waveform waveform = sampler.GetEEGWaveform(currentSpectrumElectrode);
             BasicDSP.Signal signal = waveform.Quantise();
             EEGAnalyzer analyzer = new EEGAnalyzer(waveform);
 
@@ -541,13 +648,31 @@ namespace EEGETAnalysis.GUI
         }
 
         /// <summary>
+        /// Draw emotions on ZedGraph
+        /// </summary>
+        private void DrawEmotions()
+        {
+            emotionGraph.PlotClear(1);
+
+            BasicDSP.Signal signal;
+
+            foreach (KeyValuePair<Emotion, BasicDSP.Waveform> emotion in emotionizer.Emotions)
+            {
+                signal = emotion.Value.Quantise();
+                emotionGraph.PlotSignal(1, ref signal, emotion.Key.ToString());
+            }
+
+            EmotionZedGraphRefresh();
+        }
+
+        /// <summary>
         /// Draw waveforms on ZedGraph depending on which one is selected.
         /// </summary>
         private void DrawWaveforms()
         {
             eegGraph.PlotClear(1);
 
-            BasicDSP.Waveform waveform = sampler.GetEEGWaveform(CurrentElectrode);
+            BasicDSP.Waveform waveform = sampler.GetEEGWaveform(currentElectrode);
             BasicDSP.Signal signal = waveform.Quantise();
             EEGAnalyzer analyzer = new EEGAnalyzer(waveform);
 
@@ -692,9 +817,14 @@ namespace EEGETAnalysis.GUI
             DrawWaveforms();
         }
 
+        /// <summary>
+        /// Set the current selected electrode for spectrum
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CurrentSpectrumComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            CurrentSpectrumElectrode = (Electrode)((sender as ComboBox).SelectedItem);
+            currentSpectrumElectrode = (Electrode)((sender as ComboBox).SelectedItem);
             DrawSpectrum();
         }
     }

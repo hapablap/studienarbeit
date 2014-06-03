@@ -69,8 +69,17 @@
                         <Grid Name="SpectrumGrid" Grid.Row="1"></Grid>
                     </Grid>
                 </TabItem>
-                <TabItem Header="Emotion">
-
+                <TabItem Header="Emotionen">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" x:Name="EmotionStackPanel">
+                            
+                        </StackPanel>
+                        <Grid Name="EmotionGrid" Grid.Row="1"></Grid>
+                    </Grid>
                 </TabItem>
             </TabControl>
         </GroupBox>
