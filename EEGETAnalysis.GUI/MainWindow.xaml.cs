@@ -203,6 +203,7 @@ namespace EEGETAnalysis.GUI
             StopButton.IsEnabled = status;
             RewindButton.IsEnabled = status;
             CurrentWaveComboBox.IsEnabled = status;
+            CurrentSpectrumComboBox.IsEnabled = status;
             OriginalWaveCheckBox.IsEnabled = status;
             AlphaWaveCheckBox.IsEnabled = status;
             BetaWaveCheckBox.IsEnabled = status;
@@ -745,6 +746,11 @@ namespace EEGETAnalysis.GUI
             mp.Close();
             eegGraph.PlotClear(1);
             eegZedGraph.Refresh();
+            spectrumGraph.PlotClear(1);
+            spectrumZedGraph.Refresh();
+            emotionGraph.PlotClear(1);
+            emotionZedGraph.Refresh();
+            EmotionStackPanel.Children.Clear();
             Slider.Value = 0;
             SetControlButtonsEnabled(false);
             CsvFilePathTextBox.Text = null;
