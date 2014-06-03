@@ -17,8 +17,8 @@ namespace EEGETAnalysis.Library
         /// <returns>Die quantisierte Waveform.</returns>
         public static Waveform Quantize(Waveform waveform)
         {
-            double min = 0;
-            double max = 0;
+            double min = waveform[waveform.First];
+            double max = waveform[waveform.First];
 
             // höchsten und niedrigsten Wert finden
             for (int i = waveform.First; i <= waveform.Last; i++)
@@ -27,14 +27,22 @@ namespace EEGETAnalysis.Library
                 if (waveform[i] > max) max = waveform[i];
             }
 
-            // neue Waveform generieren, welche die quantisierten Werte enthält
-            Waveform quantizedWaveform = new Waveform(0, waveform.Rate);
-            for (int i = waveform.First; i <= waveform.Last; i++)
+            if (max - min > 0)
             {
-                quantizedWaveform.Add((waveform[i] - min) / (max - min));
+                // neue Waveform generieren, welche die quantisierten Werte enthält
+                Waveform quantizedWaveform = new Waveform(0, waveform.Rate);
+                for (int i = waveform.First; i <= waveform.Last; i++)
+                {
+                    quantizedWaveform.Add((waveform[i] - min) / (max - min));
+                }
+                return quantizedWaveform;
+            }
+            else
+            {
+                return waveform;
             }
 
-            return quantizedWaveform;
+
         }
 
         /// <summary>

@@ -101,11 +101,6 @@ namespace EEGETAnalysis.Library
                 emotions[Emotion.SORROW].Add(sorrow);
             }
 
-            emotions[Emotion.FEAR] = EEGUtils.Quantize(emotions[Emotion.FEAR]);
-            emotions[Emotion.JOY] = EEGUtils.Quantize(emotions[Emotion.JOY]);
-            emotions[Emotion.RAGE] = EEGUtils.Quantize(emotions[Emotion.RAGE]);
-            emotions[Emotion.SORROW] = EEGUtils.Quantize(emotions[Emotion.SORROW]);
-
             this.Emotions = emotions;
 
         }

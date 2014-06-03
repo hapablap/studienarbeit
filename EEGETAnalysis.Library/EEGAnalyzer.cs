@@ -83,7 +83,7 @@ namespace EEGETAnalysis.Library
         }
 
         /// <summary>
-        /// Generiert eine Waveform, die die sekündliche Aktivität eines EEG-Frequenzbandes wiederspiegelt. Die Samplerate ist 1 Hz.
+        /// Generiert eine Waveform, die die sekündliche Aktivität eines EEG-Frequenzbandes wiederspiegelt und speichert sie zwischen. Die Samplerate ist 1 Hz.
         /// </summary>
         private void CalculateActivity()
         {

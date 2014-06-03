@@ -655,12 +655,12 @@ namespace EEGETAnalysis.GUI
         {
             emotionGraph.PlotClear(1);
 
-            BasicDSP.Signal signal;
+            BasicDSP.Waveform signal;
 
             foreach (KeyValuePair<Emotion, BasicDSP.Waveform> emotion in emotionizer.Emotions)
             {
-                signal = emotion.Value.Quantise();
-                emotionGraph.PlotSignal(1, ref signal, emotion.Key.ToString());
+                signal = emotion.Value;
+                emotionGraph.PlotWaveform(1, ref signal, emotion.Key.ToString());
             }
 
             EmotionZedGraphRefresh();
