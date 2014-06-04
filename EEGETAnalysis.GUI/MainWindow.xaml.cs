@@ -425,7 +425,6 @@ namespace EEGETAnalysis.GUI
                 if (myPane.CurveList[i].IsLine)
                 {
                     ((ZedGraph.LineItem)myPane.CurveList[i]).Line.IsSmooth = true;
-                    ((ZedGraph.LineItem)myPane.CurveList[i]).Line.Width = 2f;
                 }
 
                 i++;
@@ -445,6 +444,11 @@ namespace EEGETAnalysis.GUI
         private void SpectrumZedGraphRefresh()
         {
             ZedGraph.GraphPane myPane = spectrumZedGraph.GraphPane;
+
+            foreach (ZedGraph.LineItem lineItem in myPane.CurveList)
+            {
+                lineItem.Line.IsSmooth = true;
+            }
 
             myPane.XAxis.Scale.FontSpec.Size = chartFontSize;
             myPane.XAxis.Title.FontSpec.Size = chartFontSize;
@@ -658,7 +662,7 @@ namespace EEGETAnalysis.GUI
 
                 CurrentWaveComboBox.SelectedIndex = 0;
                 CurrentSpectrumComboBox.SelectedIndex = 0;
-                CurrentSpectrumSizeComboBox.SelectedIndex = 0;
+                CurrentSpectrumSizeComboBox.SelectedIndex = 1;
                 OriginalWaveCheckBox.IsChecked = true;
 
                 DrawSpectrum();
