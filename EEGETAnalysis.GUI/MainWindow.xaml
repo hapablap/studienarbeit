@@ -57,7 +57,7 @@
                             <CheckBox x:Name="BetaWaveCheckBox" Foreground="Green" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Beta</CheckBox>
                             <CheckBox x:Name="ThetaWaveCheckBox" Foreground="DarkMagenta" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Theta</CheckBox>
                             <CheckBox x:Name="DeltaWaveCheckBox" Foreground="Orange" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Delta</CheckBox>
-                            <CheckBox x:Name="QuantizeCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Normalize</CheckBox>
+                            <CheckBox x:Name="NormalizeCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Normalize</CheckBox>
                         </StackPanel>
                         <Grid Name="EEGGrid" Grid.Row="1"></Grid>
                     </Grid>

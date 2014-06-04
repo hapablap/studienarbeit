@@ -239,7 +239,7 @@ namespace EEGETAnalysis.GUI
             BetaWaveCheckBox.IsEnabled = status;
             ThetaWaveCheckBox.IsEnabled = status;
             DeltaWaveCheckBox.IsEnabled = status;
-            QuantizeCheckBox.IsEnabled = status;
+            NormalizeCheckBox.IsEnabled = status;
             CurrentSpectrumSizeComboBox.IsEnabled = status;
             Slider.IsEnabled = status;
         }
@@ -731,11 +731,11 @@ namespace EEGETAnalysis.GUI
                 BasicDSP.Waveform waveform = sampler.GetEEGWaveform(currentElectrode);
                 EEGAnalyzer analyzer = new EEGAnalyzer(waveform);
 
-                bool quantize = QuantizeCheckBox.IsChecked == true ? true : false;
+                bool normalize = NormalizeCheckBox.IsChecked == true ? true : false;
 
                 if (OriginalWaveCheckBox.IsChecked == true)
                 {
-                    if (quantize)
+                    if (normalize)
                     {
                         waveform = EEGUtils.Normalize(waveform);
                     }
@@ -747,28 +747,28 @@ namespace EEGETAnalysis.GUI
                 if (AlphaWaveCheckBox.IsChecked == true)
                 {
                     waveformColors.Add(System.Drawing.Color.Red);
-                    BasicDSP.Waveform waveformAlpha = analyzer.FilterBand(EEGBand.ALPHA, quantize);
+                    BasicDSP.Waveform waveformAlpha = analyzer.FilterBand(EEGBand.ALPHA, normalize);
                     eegGraph.PlotWaveform(1, ref waveformAlpha, "Alpha");
                 }
 
                 if (BetaWaveCheckBox.IsChecked == true)
                 {
                     waveformColors.Add(System.Drawing.Color.Green);
-                    BasicDSP.Waveform waveformBeta = analyzer.FilterBand(EEGBand.BETA, quantize);
+                    BasicDSP.Waveform waveformBeta = analyzer.FilterBand(EEGBand.BETA, normalize);
                     eegGraph.PlotWaveform(1, ref waveformBeta, "Beta");
                 }
 
                 if (ThetaWaveCheckBox.IsChecked == true)
                 {
                     waveformColors.Add(System.Drawing.Color.DarkMagenta);
-                    BasicDSP.Waveform waveformTheta = analyzer.FilterBand(EEGBand.THETA, quantize);
+                    BasicDSP.Waveform waveformTheta = analyzer.FilterBand(EEGBand.THETA, normalize);
                     eegGraph.PlotWaveform(1, ref waveformTheta, "Theta");
                 }
 
                 if (DeltaWaveCheckBox.IsChecked == true)
                 {
                     waveformColors.Add(System.Drawing.Color.Orange);
-                    BasicDSP.Waveform waveformDelta = analyzer.FilterBand(EEGBand.DELTA, quantize);
+                    BasicDSP.Waveform waveformDelta = analyzer.FilterBand(EEGBand.DELTA, normalize);
                     eegGraph.PlotWaveform(1, ref waveformDelta, "Delta");
                 }
 
