@@ -390,9 +390,17 @@ namespace EEGETAnalysis.GUI
 
                     TextBlock textBlock = new TextBlock() { Text = text, Foreground = tmpBrush, Margin = margin };
                     EmotionStackPanel.Children.Add(textBlock);
+
                     myPane.CurveList[i].Color = tmpColor;
                     i++;
                 }
+            }
+
+
+            foreach (ZedGraph.LineItem lineItem in myPane.CurveList)
+            {
+                lineItem.Line.IsSmooth = true;
+                lineItem.Line.Width = 2f;
             }
 
             myPane.XAxis.Scale.FontSpec.Size = chartFontSize;
@@ -414,6 +422,12 @@ namespace EEGETAnalysis.GUI
             foreach (System.Drawing.Color color in waveformColors)
             {
                 myPane.CurveList[i].Color = color;
+                if (myPane.CurveList[i].IsLine)
+                {
+                    ((ZedGraph.LineItem)myPane.CurveList[i]).Line.IsSmooth = true;
+                    ((ZedGraph.LineItem)myPane.CurveList[i]).Line.Width = 2f;
+                }
+
                 i++;
             }
 
