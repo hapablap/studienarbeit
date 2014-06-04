@@ -731,7 +731,7 @@ namespace EEGETAnalysis.GUI
                 {
                     if (quantize)
                     {
-                        waveform = EEGUtils.Quantize(waveform);
+                        waveform = EEGUtils.Normalize(waveform);
                     }
 
                     waveformColors.Add(System.Drawing.Color.Blue);

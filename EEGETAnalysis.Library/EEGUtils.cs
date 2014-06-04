@@ -11,38 +11,54 @@ namespace EEGETAnalysis.Library
     {
 
         /// <summary>
-        /// Quantisiert eine Waveform in den Bereich zwischen 0 und 1.
+        /// Normalisiert eine Waveform in den Bereich zwischen 0 und 1.
         /// </summary>
         /// <param name="waveform">Die originale Waveform.</param>
-        /// <returns>Die quantisierte Waveform.</returns>
-        public static Waveform Quantize(Waveform waveform)
+        /// <returns>Die normalisierte Waveform.</returns>
+        public static Waveform Normalize(Waveform waveform)
         {
-            double min = waveform[waveform.First];
-            double max = waveform[waveform.First];
+            List<Waveform> waveforms = new List<Waveform>();
+            waveforms.Add(waveform);
+            NormalizeMultiple(ref waveforms);
+            return waveforms[0];
+        }
 
-            // höchsten und niedrigsten Wert finden
-            for (int i = waveform.First; i <= waveform.Last; i++)
+        /// <summary>
+        /// Normalisiert mehrere Waveforms in den Bereich zwischen 0 und 1. Die Referenzen (Minimum und Maximum) werden dabei über alle Waveforms hinweg gesucht.
+        /// </summary>
+        /// <param name="waveforms">Die zu normalisierenden Waveforms. Die Liste wird durch die normalisierten Waveforms ersetzt.</param>
+        public static void NormalizeMultiple(ref List<Waveform> waveforms)
+        {
+            if (waveforms.Count < 1) return;
+
+            double min = waveforms[0][waveforms[0].First];
+            double max = waveforms[0][waveforms[0].First];
+
+            // kleinsten und größten Wert suchen
+            foreach (Waveform wf in waveforms)
             {
-                if (waveform[i] < min) min = waveform[i];
-                if (waveform[i] > max) max = waveform[i];
+                for (int i = wf.First; i <= wf.Last; i++)
+                {
+                    if (wf[i] < min) min = wf[i];
+                    if (wf[i] > max) max = wf[i];
+                }
             }
 
+            // alle Waveforms normalisieren
             if (max - min > 0)
             {
-                // neue Waveform generieren, welche die quantisierten Werte enthält
-                Waveform quantizedWaveform = new Waveform(0, waveform.Rate);
-                for (int i = waveform.First; i <= waveform.Last; i++)
+                for (int j = 0; j < waveforms.Count; j++)
                 {
-                    quantizedWaveform.Add((waveform[i] - min) / (max - min));
+                    Waveform wf = waveforms[j];
+                    Waveform normalizedWaveform = new Waveform(0, wf.Rate);
+                    for (int i = wf.First; i <= wf.Last; i++)
+                    {
+                        // Wert normalisieren
+                        normalizedWaveform.Add((wf[i] - min) / (max - min));
+                    }
+                    waveforms[j] = normalizedWaveform;
                 }
-                return quantizedWaveform;
             }
-            else
-            {
-                return waveform;
-            }
-
-
         }
 
         /// <summary>

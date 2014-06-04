@@ -43,7 +43,7 @@ namespace EEGETAnalysis.Library
             }
             if (quantize)
             {
-                return EEGUtils.Quantize(filteredWaveform);
+                return EEGUtils.Normalize(filteredWaveform);
             }
             else
             {

@@ -60,10 +60,10 @@ namespace EEGETAnalysis.Library
         /// </summary>
         private void CalculateEmotions()
         {
-            Waveform alphaAcitvity = EEGUtils.Quantize(AverageActivity[EEGBand.ALPHA]);
-            Waveform betaActivity = EEGUtils.Quantize(AverageActivity[EEGBand.BETA]);
-            Waveform thetaActivity = EEGUtils.Quantize(AverageActivity[EEGBand.THETA]);
-            Waveform deltaActivity = EEGUtils.Quantize(AverageActivity[EEGBand.DELTA]);
+
+            Waveform alphaActivity = EEGUtils.Normalize(AverageActivity[EEGBand.ALPHA]);
+            Waveform betaActivity = EEGUtils.Normalize(AverageActivity[EEGBand.BETA]);
+            Waveform thetaActivity = EEGUtils.Normalize(AverageActivity[EEGBand.THETA]);
 
             Dictionary<Emotion, Waveform> emotions = new Dictionary<Emotion, Waveform>();
             emotions.Add(Emotion.FEAR, new Waveform(0, 1));
@@ -71,16 +71,15 @@ namespace EEGETAnalysis.Library
             emotions.Add(Emotion.RAGE, new Waveform(0, 1));
             emotions.Add(Emotion.SORROW, new Waveform(0, 1));
 
-            double alpha, beta, theta, delta, fear, joy, rage, sorrow;
+            double alpha, beta, theta, fear, joy, rage, sorrow;
 
-            for (int i = alphaAcitvity.First; i <= alphaAcitvity.Last; i++)
+            for (int i = alphaActivity.First; i <= alphaActivity.Last; i++)
             {
-                alpha = alphaAcitvity[i];
+                alpha = alphaActivity[i];
                 beta = betaActivity[i];
                 theta = thetaActivity[i];
-                delta = deltaActivity[i];
 
-                if (alpha == 0 && beta == 0 && theta == 0 && delta == 0)
+                if (alpha == 0 && beta == 0 && theta == 0)
                 {
                     fear = 0;
                     joy = 0;
@@ -100,7 +99,7 @@ namespace EEGETAnalysis.Library
                 emotions[Emotion.RAGE].Add(rage);
                 emotions[Emotion.SORROW].Add(sorrow);
             }
-
+            
             this.Emotions = emotions;
 
         }
