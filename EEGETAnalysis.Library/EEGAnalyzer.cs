@@ -66,12 +66,12 @@ namespace EEGETAnalysis.Library
         /// Ermittelt das Spektrum eines Signalausschnitts.
         /// </summary>
         /// <param name="beginSample">Beginn des Signalausschnitts (Index)</param>
-        /// <param name="length">Länge des Signalausschnitts (Zahl der Indizes)</param>
-        /// <returns>Das komplexwertige Spektrum. Seine Länge ist length / 2.</returns>
-        public Spectrum GetSpectrum(int beginSample, int length)
+        /// <param name="fftSize">Länge des Signalausschnitts (Zahl der Indizes)</param>
+        /// <returns>Das komplexwertige Spektrum. Seine Länge ist fftSize / 2.</returns>
+        public Spectrum GetSpectrum(int beginSample, int fftSize)
         {
             // 1 Sekunde langes Stück herausschneiden
-            Waveform cutWaveform = Waveform.Cut(beginSample, length);
+            Waveform cutWaveform = Waveform.Cut(beginSample, fftSize);
 
             // Fensterfunktion anwenden, um Leck-Effekte an den Signalrändern zu vermeiden
             Waveform windowedCutWaveform = Window.Hamming(cutWaveform);
@@ -86,16 +86,11 @@ namespace EEGETAnalysis.Library
         /// Ermittelt das Amplitudenspektrum eines Singalausschnitts.
         /// </summary>
         /// <param name="beginSample">Beginn des Signalausschnitts (Index)</param>
-        /// <param name="length">Länge des Signalausschnitts (Zahl der Indizes)</param>
-        /// <returns>Das Amplitudenspektrum. Seine Länge ist length / 2.</returns>
-        public Waveform GetAmplitudeSpectrum(int beginSample, int length) {
+        /// <param name="fftSize">Länge des Signalausschnitts (Zahl der Indizes)</param>
+        /// <returns>Das Amplitudenspektrum. Seine Länge ist fftSize / 2.</returns>
+        public Waveform GetAmplitudeSpectrum(int beginSample, int fftSize) {
 
-            Waveform magnitudeWaveform = GetSpectrum(beginSample, length).Mag();
-            /*for (int i = magnitudeWaveform.First; i <= magnitudeWaveform.Last; i++)
-            {
-                magnitudeWaveform[i] = Math.Log10(magnitudeWaveform[i]);
-            }*/
-
+            Waveform magnitudeWaveform = GetSpectrum(beginSample, fftSize).Mag();
             return magnitudeWaveform;
         }
 
@@ -110,23 +105,23 @@ namespace EEGETAnalysis.Library
                 double minFreq = eegBand.GetMinFreq();
                 double maxFreq = eegBand.GetMaxFreq();
 
-                // wir nehmen das Spektrum der letzen 2 Sekunden
-                int retrospectionCount = (int)sampleRate * 2;
+                // wir nehmen das Spektrum über 128 Samples
+                int fftSize = 128;
 
                 // die Samplerate der Activity-Waveform soll 1 Hz sein.
                 int activitySampleRate = 1;
 
                 // finde die Indizes im diskreten Spektrum, die Ober- und Unterkante des Frequenzbands darstellen
-                int minFreqIndex = EEGUtils.FindSpectrumIndexForFreq(minFreq, retrospectionCount / 2, (int)sampleRate);
-                int maxFreqIndex = EEGUtils.FindSpectrumIndexForFreq(maxFreq, retrospectionCount / 2, (int)sampleRate);
+                int minFreqIndex = EEGUtils.FindSpectrumIndexForFreq(minFreq, fftSize / 2, (int)sampleRate);
+                int maxFreqIndex = EEGUtils.FindSpectrumIndexForFreq(maxFreq, fftSize / 2, (int)sampleRate);
 
                 // wir benötigen eine leere Waveform
                 Waveform activityWaveform = new Waveform(0, activitySampleRate);
 
                 // Ermittle das Frequenzspektrum in regelmäßigen Abständen  und berechne die Aktivität im Frequenzband
-                for (int i = Waveform.First; i <= Waveform.Last - retrospectionCount; i = i + ((int)sampleRate / activitySampleRate))
+                for (int i = Waveform.First; i <= Waveform.Last - fftSize; i = i + ((int)sampleRate / activitySampleRate))
                 {
-                    Waveform amplitudeSpectrum = GetAmplitudeSpectrum(i, retrospectionCount);
+                    Waveform amplitudeSpectrum = GetAmplitudeSpectrum(i, fftSize);
                     double activityValue = 0;
                     for (int j = minFreqIndex; j <= maxFreqIndex; j++)
                     {
@@ -135,10 +130,10 @@ namespace EEGETAnalysis.Library
                     activityWaveform.Add(activityValue / (maxFreqIndex - minFreqIndex + 1));
                 }
 
-                // Die Waveform ist etwas zu kurz und die Werte beziehen sich jeweils auf zwei Sekunden später
+                // Die Waveform ist etwas zu kurz (fftSize) und die Werte beziehen sich jeweils auf zwei Sekunden später
                 // Kompensieren, indem die Welle nach hinten verschoben wird und die ersten Werte denselben Wert annehmen
                 Waveform compensationWaveform = new Waveform(0, activitySampleRate);
-                for (int i = 0; i <= retrospectionCount; i = i + ((int)sampleRate / activitySampleRate))
+                for (int i = 0; i <= fftSize; i = i + ((int)sampleRate / activitySampleRate))
                 {
                     compensationWaveform.Add(activityWaveform[activityWaveform.First]);
                 }

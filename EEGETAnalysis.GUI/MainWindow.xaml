@@ -67,6 +67,12 @@
                         </Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <ComboBox x:Name="CurrentSpectrumComboBox" Margin="0,0,15,0" SelectionChanged="CurrentSpectrumComboBox_SelectionChanged" Width="100"></ComboBox>
+                            <Label Content="FFT size: " />
+                            <ComboBox x:Name="SpectrumSizeComboBox" Margin="0,0,15,0" Width="100" SelectionChanged="SpectrumSizeComboBox_SelectionChanged" SelectedIndex="1">
+                                <ComboBoxItem Content="64"/>
+                                <ComboBoxItem Content="128"/>
+                                <ComboBoxItem Content="256"/>
+                            </ComboBox>
                         </StackPanel>
                         <Grid Name="SpectrumGrid" Grid.Row="1"></Grid>
                     </Grid>

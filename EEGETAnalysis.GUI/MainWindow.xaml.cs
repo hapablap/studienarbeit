@@ -637,12 +637,11 @@ namespace EEGETAnalysis.GUI
             spectrumGraph.PlotClear(1);
 
             BasicDSP.Waveform waveform = sampler.GetEEGWaveform(currentSpectrumElectrode);
-            BasicDSP.Signal signal = waveform.Quantise();
             EEGAnalyzer analyzer = new EEGAnalyzer(waveform);
 
             int spectrumIndex = Convert.ToInt32(Convert.ToDouble(analyzer.Waveform.Count) * currentVideoPositionInPercent);
 
-            BasicDSP.Spectrum spectrum = analyzer.GetSpectrum(spectrumIndex, 100);
+            BasicDSP.Spectrum spectrum = analyzer.GetSpectrum(spectrumIndex, Convert.ToInt32(((ComboBoxItem) SpectrumSizeComboBox.SelectedItem).Content));
             spectrumGraph.PlotDbSpectrum(1, ref spectrum, "");
 
             SpectrumZedGraphRefresh();
@@ -836,6 +835,13 @@ namespace EEGETAnalysis.GUI
         private void CurrentSpectrumComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             currentSpectrumElectrode = (Electrode)((sender as ComboBox).SelectedItem);
+            DrawSpectrum();
+        }
+
+
+        private void SpectrumSizeComboBox_SelectionChanged(Object sender, SelectionChangedEventArgs e)
+        {
+            if (spectrumGraph != null)
             DrawSpectrum();
         }
     }
