@@ -54,6 +54,10 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="WindowsFormsIntegration" />
+    <Reference Include="WPFToolkit.Extended, Version=1.5.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libraries\WPFToolkit.Extended\WPFToolkit.Extended.dll</HintPath>
+    </Reference>
     <Reference Include="ZedGraph, Version=5.1.5.28844, Culture=neutral, PublicKeyToken=02a83cbd123fcd60, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Libraries\BasicDSP\ZedGraph.dll</HintPath>
@@ -109,9 +113,6 @@
       <Project>{cc927632-89ef-4542-8d63-c8cbdc563030}</Project>
       <Name>EEGETAnalysis.Library</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="eye.png" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Libraries\BasicDSP\BasicDSP.dll" />

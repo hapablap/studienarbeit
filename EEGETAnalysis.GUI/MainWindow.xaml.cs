@@ -216,7 +216,9 @@ namespace EEGETAnalysis.GUI
         {
             if (!String.IsNullOrEmpty(CsvFilePathTextBox.Text) && !String.IsNullOrEmpty(MediaFilePathTextBox.Text))
             {
+                BusyBar.IsBusy = true;
                 ProcessCSVData();
+                BusyBar.IsBusy = false;
             }
         }
 

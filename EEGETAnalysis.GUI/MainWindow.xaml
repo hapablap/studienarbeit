@@ -1,7 +1,7 @@
 ﻿<Window x:Class="EEGETAnalysis.GUI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:wpfx="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit/extended"
         Loaded="Window_Loaded"
         Title="EEGET Analysis">
     <Grid>
@@ -38,7 +38,9 @@
                 </Grid>
             </StackPanel>
         </GroupBox>
-        <Canvas x:Name="MediaCanvas" Grid.Row="1"></Canvas>
+        <Canvas x:Name="MediaCanvas" Grid.Row="1">
+            <wpfx:BusyIndicator Name="BusyBar" BusyContent="Loading CSV data..."></wpfx:BusyIndicator>
+        </Canvas>
         <GroupBox Grid.Row="2" Header="EEG Data">
             <TabControl x:Name="EEGDataTabControl">
                 <TabItem Header="EEG Waves">
@@ -55,7 +57,7 @@
                             <CheckBox x:Name="BetaWaveCheckBox" Foreground="Green" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Beta</CheckBox>
                             <CheckBox x:Name="ThetaWaveCheckBox" Foreground="DarkMagenta" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Theta</CheckBox>
                             <CheckBox x:Name="DeltaWaveCheckBox" Foreground="Orange" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Delta</CheckBox>
-                            <CheckBox x:Name="QuantizeCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Quantize</CheckBox>
+                            <CheckBox x:Name="QuantizeCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Normalize</CheckBox>
                         </StackPanel>
                         <Grid Name="EEGGrid" Grid.Row="1"></Grid>
                     </Grid>
