@@ -40,7 +40,7 @@
         <Canvas x:Name="MediaCanvas" Grid.Row="1"></Canvas>
         <GroupBox Grid.Row="2" Header="EEG Data">
             <TabControl x:Name="EEGDataTabControl">
-                <TabItem Header="EEG Wellen">
+                <TabItem Header="EEG Waves">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="30"/>
@@ -48,16 +48,18 @@
                         </Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <ComboBox x:Name="CurrentWaveComboBox" Margin="0,0,15,0" SelectionChanged="CurrentWaveComboBox_SelectionChanged" Width="100"></ComboBox>
-                            <CheckBox x:Name="OriginalWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,3,15,0">Original Welle</CheckBox>
+                            <CheckBox x:Name="OriginalWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,3,15,0">Original Waveform
+                            </CheckBox>
                             <CheckBox x:Name="AlphaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,3,15,0">Alpha</CheckBox>
                             <CheckBox x:Name="BetaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,3,15,0">Beta</CheckBox>
                             <CheckBox x:Name="ThetaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,3,15,0">Theta</CheckBox>
                             <CheckBox x:Name="DeltaWaveCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,3,15,0">Delta</CheckBox>
+                            <CheckBox x:Name="QuantizeCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,3,15,0">Quantize</CheckBox>
                         </StackPanel>
                         <Grid Name="EEGGrid" Grid.Row="1"></Grid>
                     </Grid>
                 </TabItem>
-                <TabItem Header="Spektrum">
+                <TabItem Header="Spectrum">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="30"/>
@@ -69,7 +71,7 @@
                         <Grid Name="SpectrumGrid" Grid.Row="1"></Grid>
                     </Grid>
                 </TabItem>
-                <TabItem Header="Emotionen">
+                <TabItem Header="Emotions">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="30"/>

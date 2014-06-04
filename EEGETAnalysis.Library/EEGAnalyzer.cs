@@ -27,11 +27,28 @@ namespace EEGETAnalysis.Library
         /// </summary>
         /// <param name="eegBand">Das Frequenzband, auf das die Waveform beschränkt werden soll.</param>
         /// <returns>Die gefilterte Waveform.</returns>
-        public Waveform FilterBand(EEGBand eegBand)
+        public Waveform FilterBand(EEGBand eegBand, bool quantize = false)
         {
             LTISystem filterSystem = Filter.NRBandPass(eegBand.GetMinFreq() / sampleRate, eegBand.GetMaxFreq() / sampleRate, 10);
             Waveform wf = this.Waveform;
-            return filterSystem.Filter(ref wf);
+            Waveform filteredWaveform = filterSystem.Filter(ref wf);
+
+            // Am Anfang entsteht ein großer Ausschlag, diesen entfernen
+            if (filteredWaveform.Count > 10)
+            {
+                for (int i = filteredWaveform.First; i < filteredWaveform.First + 10; i++)
+                {
+                    filteredWaveform[i] = filteredWaveform[filteredWaveform.First + 10];
+                }
+            }
+            if (quantize)
+            {
+                return EEGUtils.Quantize(filteredWaveform);
+            }
+            else
+            {
+                return filteredWaveform;
+            }
         }
         
 

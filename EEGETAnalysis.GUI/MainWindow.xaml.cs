@@ -674,36 +674,41 @@ namespace EEGETAnalysis.GUI
             eegGraph.PlotClear(1);
 
             BasicDSP.Waveform waveform = sampler.GetEEGWaveform(currentElectrode);
-            BasicDSP.Signal signal = waveform.Quantise();
             EEGAnalyzer analyzer = new EEGAnalyzer(waveform);
+
+            bool quantize = QuantizeCheckBox.IsChecked == true ? true : false;
 
             if (OriginalWaveCheckBox.IsChecked == true)
             {
-                eegGraph.PlotSignal(1, ref signal, "");
+                if (quantize)
+                {
+                    waveform = EEGUtils.Quantize(waveform);
+                }
+                eegGraph.PlotWaveform(1, ref waveform, "");
             }
-
+                        
             if (AlphaWaveCheckBox.IsChecked == true)
             {
-                BasicDSP.Signal waveformAlpha = analyzer.FilterBand(EEGBand.ALPHA).Quantise();
-                eegGraph.PlotSignal(1, ref waveformAlpha, "");
+                BasicDSP.Waveform waveformAlpha = analyzer.FilterBand(EEGBand.ALPHA, quantize);
+                eegGraph.PlotWaveform(1, ref waveformAlpha, "");
             }
 
             if (BetaWaveCheckBox.IsChecked == true)
             {
-                BasicDSP.Signal waveformBeta = analyzer.FilterBand(EEGBand.BETA).Quantise();
-                eegGraph.PlotSignal(1, ref waveformBeta, "");
+                BasicDSP.Waveform waveformBeta = analyzer.FilterBand(EEGBand.BETA, quantize);
+                eegGraph.PlotWaveform(1, ref waveformBeta, "");
             }
 
             if (ThetaWaveCheckBox.IsChecked == true)
             {
-                BasicDSP.Signal waveformTheta = analyzer.FilterBand(EEGBand.THETA).Quantise();
-                eegGraph.PlotSignal(1, ref waveformTheta, "");
+                BasicDSP.Waveform waveformTheta = analyzer.FilterBand(EEGBand.THETA, quantize);
+                eegGraph.PlotWaveform(1, ref waveformTheta, "");
             }
 
             if (DeltaWaveCheckBox.IsChecked == true)
             {
-                BasicDSP.Signal waveformDelta = analyzer.FilterBand(EEGBand.DELTA).Quantise();
-                eegGraph.PlotSignal(1, ref waveformDelta, "");
+                BasicDSP.Waveform waveformDelta = analyzer.FilterBand(EEGBand.DELTA, quantize);
+                eegGraph.PlotWaveform(1, ref waveformDelta, "");
             }
 
             EEGZedGraphRefresh();
