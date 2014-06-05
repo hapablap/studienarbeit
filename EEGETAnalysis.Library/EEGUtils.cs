@@ -61,16 +61,6 @@ namespace EEGETAnalysis.Library
             }
         }
 
-        /// <summary>
-        /// Findet zu einer Frequenz den nächstkleineren Index im diskreten Spektrum.
-        /// </summary>
-        /// <param name="freq">Frequenz</param>
-        /// <returns>Index im diskreten Spektrum</returns>
-        public static int FindSpectrumIndexForFreq(double freq, int spectrumLength, int sampleRate)
-        {
-            return (int)Math.Floor(freq / (sampleRate / 2) * spectrumLength);
-        }
-
 
         /// <summary>
         /// Bildet den Durschnitt aus einer Liste aus Waveforms. Die Waveforms müssen gleich lang sein.

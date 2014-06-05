@@ -26,22 +26,20 @@ namespace EEGETAnalysis.Library
         /// Wendet einen Band-Pass-Filter auf die Waveform an.
         /// </summary>
         /// <param name="eegBand">Das Frequenzband, auf das die Waveform beschränkt werden soll.</param>
+        /// <param name="normalize">Gibt an, ob die gefilterte Waveform normalisiert werden soll.</param>
         /// <returns>Die gefilterte Waveform.</returns>
-        public Waveform FilterBand(EEGBand eegBand, bool quantize = false)
+        public Waveform FilterBand(EEGBand eegBand, bool normalize = false)
         {
-            LTISystem filterSystem = Filter.NRBandPass(eegBand.GetMinFreq() / sampleRate, eegBand.GetMaxFreq() / sampleRate, 10);
+            LTISystem filterSystem = Filter.NRBandPass(eegBand.GetMinFreq() / sampleRate, eegBand.GetMaxFreq() / sampleRate, 32);
             Waveform wf = this.Waveform;
             Waveform filteredWaveform = filterSystem.Filter(ref wf);
 
             // Am Anfang entsteht ein großer Ausschlag, diesen entfernen
-            if (filteredWaveform.Count > 10)
+            if (filteredWaveform.Count > 32)
             {
-                for (int i = filteredWaveform.First; i < filteredWaveform.First + 10; i++)
-                {
-                    filteredWaveform[i] = filteredWaveform[filteredWaveform.First + 10];
-                }
+                filteredWaveform = EEGUtils.Concatenate(new Waveform(32, sampleRate), filteredWaveform.Cut(Waveform.First + 32, Waveform.Last - Waveform.First - 32));
             }
-            if (quantize)
+            if (normalize)
             {
                 return EEGUtils.Normalize(filteredWaveform);
             }
@@ -112,8 +110,8 @@ namespace EEGETAnalysis.Library
                 int activitySampleRate = 1;
 
                 // finde die Indizes im diskreten Spektrum, die Ober- und Unterkante des Frequenzbands darstellen
-                int minFreqIndex = EEGUtils.FindSpectrumIndexForFreq(minFreq, fftSize / 2, (int)sampleRate);
-                int maxFreqIndex = EEGUtils.FindSpectrumIndexForFreq(maxFreq, fftSize / 2, (int)sampleRate);
+                int minFreqIndex = FindSpectrumIndexForFreq(minFreq, fftSize / 2, (int)sampleRate);
+                int maxFreqIndex = FindSpectrumIndexForFreq(maxFreq, fftSize / 2, (int)sampleRate);
 
                 // wir benötigen eine leere Waveform
                 Waveform activityWaveform = new Waveform(0, activitySampleRate);
@@ -142,6 +140,19 @@ namespace EEGETAnalysis.Library
 
            
         }
+
+        /// <summary>
+        /// Findet zu einer Frequenz den nächstkleineren Index im diskreten Spektrum.
+        /// </summary>
+        /// <param name="freq">Frequenz</param>
+        /// <param name="spectrumLength">Länge des Spektrums</param>
+        /// <param name="sampleRate">Samplerate</param>
+        /// <returns>Index im diskreten Spektrum</returns>
+        private static int FindSpectrumIndexForFreq(double freq, int spectrumLength, int sampleRate)
+        {
+            return (int)Math.Floor(freq / (sampleRate / 2) * spectrumLength);
+        }
+
 
     }
 }
