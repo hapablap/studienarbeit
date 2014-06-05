@@ -183,6 +183,11 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         ZedGraph.GraphPane activityGraphPane;
 
+        /// <summary>
+        /// List with waveform colors for the Activity wave forms
+        /// </summary>
+        List<System.Drawing.Color> activityWaveformColors;
+
         #endregion
 
         /// <summary>
@@ -269,7 +274,8 @@ namespace EEGETAnalysis.GUI
             BetaWaveCheckBox.IsEnabled = status;
             ThetaWaveCheckBox.IsEnabled = status;
             DeltaWaveCheckBox.IsEnabled = status;
-            NormalizeCheckBox.IsEnabled = status;
+            NormalizeEEGWaveformsCheckBox.IsEnabled = status;
+            NormalizeActivityCheckBox.IsEnabled = status;
             CurrentSpectrumSizeComboBox.IsEnabled = status;
             Slider.IsEnabled = status;
             SaveWAVButton.IsEnabled = status;
@@ -281,7 +287,12 @@ namespace EEGETAnalysis.GUI
                 BetaWaveCheckBox.IsChecked = false;
                 DeltaWaveCheckBox.IsChecked = false;
                 ThetaWaveCheckBox.IsChecked = false;
-                NormalizeCheckBox.IsChecked = false;
+                AlphaActivityCheckBox.IsChecked = false;
+                BetaActivityCheckBox.IsChecked = false;
+                DeltaActivityCheckBox.IsChecked = false;
+                ThetaActivityCheckBox.IsChecked = false;
+                NormalizeEEGWaveformsCheckBox.IsChecked = false;
+                NormalizeActivityCheckBox.IsChecked = false;
             }
         }
 
@@ -303,66 +314,18 @@ namespace EEGETAnalysis.GUI
             SetControlButtonsEnabled(false);
             ResetButton.IsEnabled = false;
 
-            eyePoint = new Ellipse();
-            eyePoint.Stroke = Brushes.Red;
-            eyePoint.StrokeThickness = 4;
-            eyePoint.Width = 10;
-            eyePoint.Height = 10;
-            MediaCanvas.Children.Add(eyePoint);
-
-            eyePoint.Visibility = Visibility.Hidden;
+            EyePointInit();
 
             waveformColors = new List<System.Drawing.Color>();
+            activityWaveformColors = new List<System.Drawing.Color>();
 
-            // EEG Graph (BEGIN)
-            System.Windows.Forms.Integration.WindowsFormsHost host = new System.Windows.Forms.Integration.WindowsFormsHost();
-            eegZedGraph = new ZedGraph.ZedGraphControl();
-            eegZedGraph.IsEnableZoom = false;
-            // http://goorman.free.fr/ZedGraph/zedgraph.org/wiki/indexa9f9.html?title=Edit_Points_by_Dragging_the_Mouse
-            //zedGraph.MouseDownEvent += zedGraph_MouseDownEvent;
-            host.Child = eegZedGraph;
-            EEGGrid.Children.Add(host);
+            EEGGraphInit();
+            
+            EmotionGraphInit();
 
-            eegGraph = new BasicDSP.Graph(eegZedGraph.CreateGraphics(), eegZedGraph);
+            SpectrumGraphInit();
 
-            zedGraphPane = eegZedGraph.GraphPane;
-            eegLine = new ZedGraph.LineObj(System.Drawing.Color.Red, graphLineXPosition, zedGraphPane.YAxis.Scale.Min, graphLineXPosition, zedGraphPane.YAxis.Scale.Max);
-            eegLine.Line.Width = 1f;
-            zedGraphPane.GraphObjList.Add(eegLine);
-
-            EEGZedGraphRefresh();
-            // EEG Graph (END)
-
-            // Emotion Graph (BEGIN)
-            System.Windows.Forms.Integration.WindowsFormsHost emotionHost = new System.Windows.Forms.Integration.WindowsFormsHost();
-            emotionZedGraph = new ZedGraph.ZedGraphControl();
-            emotionZedGraph.IsEnableZoom = false;
-            emotionHost.Child = emotionZedGraph;
-            EmotionGrid.Children.Add(emotionHost);
-
-            emotionGraph = new BasicDSP.Graph(emotionZedGraph.CreateGraphics(), emotionZedGraph);
-
-            emotionGraphPane = emotionZedGraph.GraphPane;
-            emotionLine = new ZedGraph.LineObj(System.Drawing.Color.Red, graphLineXPosition, emotionGraphPane.YAxis.Scale.Min, graphLineXPosition, emotionGraphPane.YAxis.Scale.Max);
-            emotionLine.Line.Width = 1f;
-            emotionGraphPane.GraphObjList.Add(emotionLine);
-
-            EmotionZedGraphRefresh();
-            // Emotion Graph (END)
-
-            // Spectrum Graph (BEGIN)
-            System.Windows.Forms.Integration.WindowsFormsHost spectrumZedGraphHost = new System.Windows.Forms.Integration.WindowsFormsHost();
-            spectrumZedGraph = new ZedGraph.ZedGraphControl();
-            spectrumZedGraph.IsEnableZoom = false;
-            spectrumZedGraphHost.Child = spectrumZedGraph;
-            SpectrumGrid.Children.Add(spectrumZedGraphHost);
-
-            spectrumGraph = new BasicDSP.Graph(spectrumZedGraph.CreateGraphics(), spectrumZedGraph);
-
-            spectrumGraphPane = spectrumZedGraph.GraphPane;
-
-            SpectrumZedGraphRefresh();
-            // Spectrum Graph (END)
+            ActivityGraphInit();
 
             // Add electrodes to combo box (EEG and spectrum)
             foreach (var item in Enum.GetValues(typeof(Electrode)))
@@ -385,6 +348,21 @@ namespace EEGETAnalysis.GUI
             BusyBar.Margin = new Thickness((MediaCanvas.ActualWidth / 2) - 75, MediaCanvas.ActualHeight / 2, 0, 0);
 
             MediaCanvas.Children.Add(BusyBar);
+        }
+
+        /// <summary>
+        /// Init EyePoint circle graph
+        /// </summary>
+        private void EyePointInit()
+        {
+            eyePoint = new Ellipse();
+            eyePoint.Stroke = Brushes.Red;
+            eyePoint.StrokeThickness = 4;
+            eyePoint.Width = 10;
+            eyePoint.Height = 10;
+            MediaCanvas.Children.Add(eyePoint);
+
+            eyePoint.Visibility = Visibility.Hidden;
         }
 
         /// <summary>
@@ -444,6 +422,7 @@ namespace EEGETAnalysis.GUI
             graphLineXPosition = (Convert.ToDouble(mp.Position.Milliseconds) * 0.001) + Convert.ToDouble(mp.Position.Seconds);
             DrawEEGLine();
             DrawEmotionLine();
+            DrawActivityLine();
         }
 
         #region Worker
@@ -517,6 +496,9 @@ namespace EEGETAnalysis.GUI
                     csvDataProcessed = true;
 
                     eegGraph.PlotClear(1);
+                    emotionGraph.PlotClear(1);
+                    activityGraph.PlotClear(1);
+                    spectrumGraph.PlotClear(1);
 
                     EEGZedGraphRefresh();
 
@@ -524,9 +506,12 @@ namespace EEGETAnalysis.GUI
                     CurrentSpectrumComboBox.SelectedIndex = 0;
                     CurrentSpectrumSizeComboBox.SelectedIndex = 1;
                     OriginalWaveCheckBox.IsChecked = true;
+                    AlphaActivityCheckBox.IsChecked = true;
 
+                    DrawEEGLine();
                     DrawSpectrum();
                     DrawEmotions();
+                    DrawActivities();
                 }
                 catch (System.IO.IOException ex)
                 {
@@ -544,6 +529,27 @@ namespace EEGETAnalysis.GUI
         #endregion
 
         #region Emotion Graph functions
+
+        /// <summary>
+        /// Emotion ZedGraph init
+        /// </summary>
+        private void EmotionGraphInit()
+        {
+            System.Windows.Forms.Integration.WindowsFormsHost emotionHost = new System.Windows.Forms.Integration.WindowsFormsHost();
+            emotionZedGraph = new ZedGraph.ZedGraphControl();
+            emotionZedGraph.IsEnableZoom = false;
+            emotionHost.Child = emotionZedGraph;
+            EmotionGrid.Children.Add(emotionHost);
+
+            emotionGraph = new BasicDSP.Graph(emotionZedGraph.CreateGraphics(), emotionZedGraph);
+
+            emotionGraphPane = emotionZedGraph.GraphPane;
+            emotionLine = new ZedGraph.LineObj(System.Drawing.Color.Red, graphLineXPosition, emotionGraphPane.YAxis.Scale.Min, graphLineXPosition, emotionGraphPane.YAxis.Scale.Max);
+            emotionLine.Line.Width = 1f;
+            emotionGraphPane.GraphObjList.Add(emotionLine);
+
+            EmotionZedGraphRefresh();
+        }
 
         /// <summary>
         /// Draw emotion line graph with different line colors.
@@ -594,7 +600,6 @@ namespace EEGETAnalysis.GUI
                     i++;
                 }
             }
-
 
             foreach (ZedGraph.LineItem lineItem in myPane.CurveList)
             {
@@ -651,6 +656,29 @@ namespace EEGETAnalysis.GUI
         #region EEG Graph functions
 
         /// <summary>
+        /// EEG ZedGraph init
+        /// </summary>
+        private void EEGGraphInit()
+        {
+            System.Windows.Forms.Integration.WindowsFormsHost host = new System.Windows.Forms.Integration.WindowsFormsHost();
+            eegZedGraph = new ZedGraph.ZedGraphControl();
+            eegZedGraph.IsEnableZoom = false;
+            // http://goorman.free.fr/ZedGraph/zedgraph.org/wiki/indexa9f9.html?title=Edit_Points_by_Dragging_the_Mouse
+            //zedGraph.MouseDownEvent += zedGraph_MouseDownEvent;
+            host.Child = eegZedGraph;
+            EEGGrid.Children.Add(host);
+
+            eegGraph = new BasicDSP.Graph(eegZedGraph.CreateGraphics(), eegZedGraph);
+
+            zedGraphPane = eegZedGraph.GraphPane;
+            eegLine = new ZedGraph.LineObj(System.Drawing.Color.Red, graphLineXPosition, zedGraphPane.YAxis.Scale.Min, graphLineXPosition, zedGraphPane.YAxis.Scale.Max);
+            eegLine.Line.Width = 1f;
+            zedGraphPane.GraphObjList.Add(eegLine);
+
+            EEGZedGraphRefresh();
+        }
+
+        /// <summary>
         /// Draw the EEGData. Refresh is called when current electrode is changed.
         /// </summary>
         private void EEGZedGraphRefresh()
@@ -705,7 +733,7 @@ namespace EEGETAnalysis.GUI
                 BasicDSP.Waveform waveform = emotionizer.Sampler.GetEEGWaveform(currentElectrode);
                 EEGAnalyzer analyzer = new EEGAnalyzer(waveform);
 
-                bool normalize = NormalizeCheckBox.IsChecked == true ? true : false;
+                bool normalize = NormalizeEEGWaveformsCheckBox.IsChecked == true ? true : false;
 
                 if (OriginalWaveCheckBox.IsChecked == true)
                 {
@@ -755,6 +783,24 @@ namespace EEGETAnalysis.GUI
         #region Spectrum Graph functions
 
         /// <summary>
+        /// Init spectrum ZedGraph
+        /// </summary>
+        private void SpectrumGraphInit()
+        {
+            System.Windows.Forms.Integration.WindowsFormsHost spectrumZedGraphHost = new System.Windows.Forms.Integration.WindowsFormsHost();
+            spectrumZedGraph = new ZedGraph.ZedGraphControl();
+            spectrumZedGraph.IsEnableZoom = false;
+            spectrumZedGraphHost.Child = spectrumZedGraph;
+            SpectrumGrid.Children.Add(spectrumZedGraphHost);
+
+            spectrumGraph = new BasicDSP.Graph(spectrumZedGraph.CreateGraphics(), spectrumZedGraph);
+
+            spectrumGraphPane = spectrumZedGraph.GraphPane;
+
+            SpectrumZedGraphRefresh();
+        }
+
+        /// <summary>
         /// Set font size for the spectrum zed graph
         /// </summary>
         private void SpectrumZedGraphRefresh()
@@ -792,6 +838,157 @@ namespace EEGETAnalysis.GUI
                 spectrumGraph.PlotDbSpectrum(1, ref spectrum, "");
 
                 SpectrumZedGraphRefresh();
+            }
+        }
+
+        #endregion
+
+        #region Activity Graph functions
+
+        /// <summary>
+        /// Activity ZedGraph init
+        /// </summary>
+        private void ActivityGraphInit()
+        {
+            System.Windows.Forms.Integration.WindowsFormsHost activityHost = new System.Windows.Forms.Integration.WindowsFormsHost();
+            activityZedGraph = new ZedGraph.ZedGraphControl();
+            activityZedGraph.IsEnableZoom = false;
+            activityHost.Child = activityZedGraph;
+            ActivityGrid.Children.Add(activityHost);
+
+            activityGraph = new BasicDSP.Graph(activityZedGraph.CreateGraphics(), activityZedGraph);
+
+            activityGraphPane = activityZedGraph.GraphPane;
+            activityLine = new ZedGraph.LineObj(System.Drawing.Color.Red, graphLineXPosition, activityGraphPane.YAxis.Scale.Min, graphLineXPosition, activityGraphPane.YAxis.Scale.Max);
+            activityLine.Line.Width = 1f;
+            activityGraphPane.GraphObjList.Add(activityLine);
+
+            ActivityZedGraphRefresh();
+        }
+
+        /// <summary>
+        /// Draw activity line graph with different line colors.
+        /// </summary>
+        private void ActivityZedGraphRefresh()
+        {
+            ZedGraph.GraphPane myPane = activityZedGraph.GraphPane;
+            System.Drawing.Color tmpColor = System.Drawing.Color.Blue;
+            Brush tmpBrush = Brushes.Blue;
+            Thickness margin = new Thickness() { Left = 5, Right = 5 };
+
+            int i = 0;
+            foreach (System.Drawing.Color color in activityWaveformColors)
+            {
+                myPane.CurveList[i].Color = color;
+                if (myPane.CurveList[i].IsLine)
+                {
+                    ((ZedGraph.LineItem)myPane.CurveList[i]).Line.IsSmooth = true;
+                    ((ZedGraph.LineItem)myPane.CurveList[i]).Line.Width = 2f;
+                }
+
+                i++;
+            }
+
+            myPane.XAxis.Scale.FontSpec.Size = chartFontSize;
+            myPane.XAxis.Title.FontSpec.Size = chartFontSize;
+            myPane.YAxis.Scale.FontSpec.Size = chartFontSize;
+            myPane.YAxis.Title.FontSpec.Size = chartFontSize;
+            myPane.Title.Text = " ";
+            activityZedGraph.Refresh();
+        }
+
+        /// <summary>
+        /// Draw the Emotion Line on the right position depending on the video position
+        /// </summary>
+        private void DrawActivityLine()
+        {
+            if (csvDataProcessed)
+            {
+                activityGraphPane.GraphObjList.Remove(activityLine);
+                activityLine = new ZedGraph.LineObj(System.Drawing.Color.Red, graphLineXPosition, activityGraphPane.YAxis.Scale.Min, graphLineXPosition, activityGraphPane.YAxis.Scale.Max);
+                activityLine.Line.Width = 1f;
+                activityGraphPane.GraphObjList.Add(activityLine);
+                activityZedGraph.Refresh();
+            }
+        }
+
+        /// <summary>
+        /// Draw emotions on ZedGraph
+        /// </summary>
+        private void DrawActivities()
+        {
+            if (csvDataProcessed)
+            {
+                activityGraph.PlotClear(1);
+                activityWaveformColors.Clear();
+
+                bool normalize = NormalizeActivityCheckBox.IsChecked == true ? true : false;
+
+                if (AlphaActivityCheckBox.IsChecked == true)
+                {
+                    BasicDSP.Waveform waveformAlpha;
+
+                    if (emotionizer.AverageActivity.TryGetValue(EEGBand.ALPHA, out waveformAlpha))
+                    {
+                        if (normalize)
+                        {
+                            waveformAlpha = EEGUtils.Normalize(waveformAlpha);
+                        }
+
+                        activityWaveformColors.Add(System.Drawing.Color.Red);
+                        activityGraph.PlotWaveform(1, ref waveformAlpha, "Alpha");
+                    }
+                }
+
+                if (BetaActivityCheckBox.IsChecked == true)
+                {
+                    BasicDSP.Waveform waveformBeta;
+
+                    if (emotionizer.AverageActivity.TryGetValue(EEGBand.BETA, out waveformBeta))
+                    {
+                        if (normalize)
+                        {
+                            waveformBeta = EEGUtils.Normalize(waveformBeta);
+                        }
+
+                        activityWaveformColors.Add(System.Drawing.Color.Green);
+                        activityGraph.PlotWaveform(1, ref waveformBeta, "Beta");
+                    }
+                }
+
+                if (ThetaActivityCheckBox.IsChecked == true)
+                {
+                    BasicDSP.Waveform waveformTheta;
+
+                    if (emotionizer.AverageActivity.TryGetValue(EEGBand.THETA, out waveformTheta))
+                    {
+                        if (normalize)
+                        {
+                            waveformTheta = EEGUtils.Normalize(waveformTheta);
+                        }
+
+                        activityWaveformColors.Add(System.Drawing.Color.DarkMagenta);
+                        activityGraph.PlotWaveform(1, ref waveformTheta, "Theta");
+                    }
+                }
+
+                if (DeltaActivityCheckBox.IsChecked == true)
+                {
+                    BasicDSP.Waveform waveformDelta;
+
+                    if (emotionizer.AverageActivity.TryGetValue(EEGBand.DELTA, out waveformDelta))
+                    {
+                        if (normalize)
+                        {
+                            waveformDelta = EEGUtils.Normalize(waveformDelta);
+                        }
+
+                        activityWaveformColors.Add(System.Drawing.Color.Orange);
+                        activityGraph.PlotWaveform(1, ref waveformDelta, "Delta");
+                    }
+                }
+
+                ActivityZedGraphRefresh();
             }
         }
 
@@ -934,6 +1131,7 @@ namespace EEGETAnalysis.GUI
             csvDataProcessed = false;
 
             waveformColors.Clear();
+            activityWaveformColors.Clear();
 
             mp = null;
             MediaCanvas.Width = this.ActualWidth;
@@ -994,7 +1192,7 @@ namespace EEGETAnalysis.GUI
         }
 
         /// <summary>
-        /// CheckBox check or unchecked event method. Draw the waveforms.
+        /// EEG Waveform CheckBox check or unchecked event method. Draw the waveforms.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1003,9 +1201,14 @@ namespace EEGETAnalysis.GUI
             DrawWaveforms();
         }
 
+        /// <summary>
+        /// Activites Waveform CheckBox check or unchecked event method. Draw the waveforms.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ActivityCheckBox_CheckedOrUnchecked(object sender, RoutedEventArgs e)
         {
-
+            DrawActivities();
         }
 
         /// <summary>

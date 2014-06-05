@@ -57,7 +57,7 @@
                             <CheckBox x:Name="BetaWaveCheckBox" Foreground="Green" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Beta</CheckBox>
                             <CheckBox x:Name="ThetaWaveCheckBox" Foreground="DarkMagenta" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Theta</CheckBox>
                             <CheckBox x:Name="DeltaWaveCheckBox" Foreground="Orange" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Delta</CheckBox>
-                            <CheckBox x:Name="NormalizeCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Normalize</CheckBox>
+                            <CheckBox x:Name="NormalizeEEGWaveformsCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Normalize</CheckBox>
                             <Button x:Name="SaveWAVButton" Click="SaveWAVButton_Click">Export *.wav...</Button>
                         </StackPanel>
                         <Grid Name="EEGGrid" Grid.Row="1"></Grid>
@@ -85,10 +85,11 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <CheckBox x:Name="AlphaActivityCheckBox" Foreground="Red" Checked="ActivityCheckBox_CheckedOrUnchecked" Unchecked="ActivityCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Alpha</CheckBox>
+                            <CheckBox x:Name="AlphaActivityCheckBox" Foreground="Red" Checked="ActivityCheckBox_CheckedOrUnchecked" Unchecked="ActivityCheckBox_CheckedOrUnchecked" Margin="5,0,15,0">Alpha</CheckBox>
                             <CheckBox x:Name="BetaActivityCheckBox" Foreground="Green" Checked="ActivityCheckBox_CheckedOrUnchecked" Unchecked="ActivityCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Beta</CheckBox>
                             <CheckBox x:Name="ThetaActivityCheckBox" Foreground="DarkMagenta" Checked="ActivityCheckBox_CheckedOrUnchecked" Unchecked="ActivityCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Theta</CheckBox>
                             <CheckBox x:Name="DeltaActivityCheckBox" Foreground="Orange" Checked="ActivityCheckBox_CheckedOrUnchecked" Unchecked="ActivityCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Delta</CheckBox>
+                            <CheckBox x:Name="NormalizeActivityCheckBox" Checked="ActivityCheckBox_CheckedOrUnchecked" Unchecked="ActivityCheckBox_CheckedOrUnchecked" Margin="0,0,15,0">Normalize</CheckBox>
                         </StackPanel>
                         <Grid Name="ActivityGrid" Grid.Row="1"></Grid>
                     </Grid>
