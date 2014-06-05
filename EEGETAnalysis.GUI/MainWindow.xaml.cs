@@ -274,6 +274,10 @@ namespace EEGETAnalysis.GUI
             BetaWaveCheckBox.IsEnabled = status;
             ThetaWaveCheckBox.IsEnabled = status;
             DeltaWaveCheckBox.IsEnabled = status;
+            AlphaActivityCheckBox.IsEnabled = status;
+            BetaActivityCheckBox.IsEnabled = status;
+            ThetaActivityCheckBox.IsEnabled = status;
+            DeltaActivityCheckBox.IsEnabled = status;
             NormalizeEEGWaveformsCheckBox.IsEnabled = status;
             NormalizeActivityCheckBox.IsEnabled = status;
             CurrentSpectrumSizeComboBox.IsEnabled = status;
@@ -375,7 +379,6 @@ namespace EEGETAnalysis.GUI
         {
             // Synchronize slider position with video
             Slider.Value = mp.Position.TotalSeconds;
-
             SynchronizeComponents();
         }
 
@@ -1125,22 +1128,25 @@ namespace EEGETAnalysis.GUI
         /// <param name="e"></param>
         private void ResetButton_Click(object sender, RoutedEventArgs e)
         {
+            timer.Stop();
             mp.Close();
-            eegGraph.PlotClear(1);
-            eegZedGraph.Refresh();
-            spectrumGraph.PlotClear(1);
-            spectrumZedGraph.Refresh();
-            emotionGraph.PlotClear(1);
-            emotionZedGraph.Refresh();
+
             EmotionStackPanel.Children.Clear();
+
             Slider.Value = 0;
+
             SetControlButtonsEnabled(false);
+
             CsvFilePathTextBox.Text = null;
             MediaFilePathTextBox.Text = null;
+
             ResetButton.IsEnabled = false;
+
             eyePoint.Visibility = Visibility.Hidden;
+
             SelectCsvFileButton.IsEnabled = true;
             SelectMediaFileButton.IsEnabled = true;
+
             csvDataProcessed = false;
 
             waveformColors.Clear();
@@ -1150,6 +1156,18 @@ namespace EEGETAnalysis.GUI
             MediaCanvas.Width = this.ActualWidth;
             DrawingBrush myDrawingBrush = new DrawingBrush();
             MediaCanvas.Background = myDrawingBrush;
+
+            eegGraph.PlotClear(1);
+            eegZedGraph.Refresh();
+
+            spectrumGraph.PlotClear(1);
+            spectrumZedGraph.Refresh();
+
+            emotionGraph.PlotClear(1);
+            emotionZedGraph.Refresh();
+
+            activityGraph.PlotClear(1);
+            activityZedGraph.Refresh();
         }
 
         /// <summary>
