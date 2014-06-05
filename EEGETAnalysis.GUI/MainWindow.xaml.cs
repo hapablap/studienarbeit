@@ -376,6 +376,14 @@ namespace EEGETAnalysis.GUI
             // Synchronize slider position with video
             Slider.Value = mp.Position.TotalSeconds;
 
+            SynchronizeComponents();
+        }
+
+        /// <summary>
+        /// Synchronize all components (Eye Tracking, media etc).
+        /// </summary>
+        private void SynchronizeComponents()
+        {
             List<EEGSample> samples = emotionizer.Sampler.GetAllGoodSamples();
 
             currentDataIndex = (int)(samples.Count * currentVideoPositionInPercent);
@@ -423,6 +431,7 @@ namespace EEGETAnalysis.GUI
             DrawEEGLine();
             DrawEmotionLine();
             DrawActivityLine();
+            DrawSpectrum();
         }
 
         #region Worker
@@ -473,6 +482,7 @@ namespace EEGETAnalysis.GUI
                     emotionizer = workerResult.Emotionizer;
 
                     mp = new MediaPlayer();
+                    mp.ScrubbingEnabled = true;
                     mp.MediaOpened += mp_MediaOpened;
                     mp.MediaEnded += mp_MediaEnded;
 
@@ -1054,9 +1064,12 @@ namespace EEGETAnalysis.GUI
                 currentVideoPositionInPercent = 100;
             }
 
-            DrawSpectrum();
-
             TimeTextBlock.Text = String.Format("{0:00}", mp.Position.Hours) + ":" + String.Format("{0:00}", mp.Position.Minutes) + ":" + String.Format("{0:00}", mp.Position.Seconds);
+
+            if(!timer.IsEnabled)
+            {
+                SynchronizeComponents();
+            }
         }
 
         /// <summary>
