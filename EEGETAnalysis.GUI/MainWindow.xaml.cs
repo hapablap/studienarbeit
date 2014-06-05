@@ -40,11 +40,6 @@ namespace EEGETAnalysis.GUI
         double mediaDuration = 0;
 
         /// <summary>
-        /// Sampler instance
-        /// </summary>
-        Sampler sampler = null;
-
-        /// <summary>
         /// Video size in percent. Value is used to calculate video size on window resize.
         /// </summary>
         private double videoSizeInPercent = 100;
@@ -256,6 +251,17 @@ namespace EEGETAnalysis.GUI
             NormalizeCheckBox.IsEnabled = status;
             CurrentSpectrumSizeComboBox.IsEnabled = status;
             Slider.IsEnabled = status;
+            SaveWAVButton.IsEnabled = status;
+
+            if(!status)
+            {
+                OriginalWaveCheckBox.IsChecked = false;
+                AlphaWaveCheckBox.IsChecked = false;
+                BetaWaveCheckBox.IsChecked = false;
+                DeltaWaveCheckBox.IsChecked = false;
+                ThetaWaveCheckBox.IsChecked = false;
+                NormalizeCheckBox.IsChecked = false;
+            }
         }
 
         /// <summary>
@@ -379,7 +385,6 @@ namespace EEGETAnalysis.GUI
                 int sampleRate = Convert.ToInt32(parser.GetMetaDataDictionary().GetValue("Sample Rate"));
 
                 Sampler sampler = new Sampler(csvData, sampleRate);
-                result.Sampler = sampler;
                 result.Emotionizer = new EEGEmotionizer(sampler);
                 result.Success = true;
             }
@@ -405,7 +410,6 @@ namespace EEGETAnalysis.GUI
                 try
                 {
                     emotionizer = workerResult.Emotionizer;
-                    sampler = workerResult.Sampler;
 
                     mp = new MediaPlayer();
                     mp.MediaOpened += mp_MediaOpened;
@@ -589,7 +593,7 @@ namespace EEGETAnalysis.GUI
             // Synchronize slider position with video
             Slider.Value = mp.Position.TotalSeconds;
 
-            List<EEGSample> samples = sampler.GetAllGoodSamples();
+            List<EEGSample> samples = emotionizer.Sampler.GetAllGoodSamples();
             
             currentDataIndex = (int)(samples.Count * currentVideoPositionInPercent);
 
@@ -746,7 +750,7 @@ namespace EEGETAnalysis.GUI
             {
                 spectrumGraph.PlotClear(1);
 
-                BasicDSP.Waveform waveform = sampler.GetEEGWaveform(currentSpectrumElectrode);
+                BasicDSP.Waveform waveform = emotionizer.Sampler.GetEEGWaveform(currentSpectrumElectrode);
                 EEGAnalyzer analyzer = new EEGAnalyzer(waveform);
 
                 int spectrumIndex = Convert.ToInt32(Convert.ToDouble(analyzer.Waveform.Count) * currentVideoPositionInPercent);
@@ -789,7 +793,7 @@ namespace EEGETAnalysis.GUI
                 eegGraph.PlotClear(1);
                 waveformColors.Clear();
 
-                BasicDSP.Waveform waveform = sampler.GetEEGWaveform(currentElectrode);
+                BasicDSP.Waveform waveform = emotionizer.Sampler.GetEEGWaveform(currentElectrode);
                 EEGAnalyzer analyzer = new EEGAnalyzer(waveform);
 
                 bool normalize = NormalizeCheckBox.IsChecked == true ? true : false;
@@ -846,6 +850,7 @@ namespace EEGETAnalysis.GUI
         {
             mp.Stop();
             mp.Position = TimeSpan.FromSeconds(0);
+            eyePoint.Visibility = Visibility.Hidden;
         }
 
         /// <summary>
@@ -888,6 +893,8 @@ namespace EEGETAnalysis.GUI
             SelectCsvFileButton.IsEnabled = true;
             SelectMediaFileButton.IsEnabled = true;
             csvDataProcessed = false;
+            
+            waveformColors.Clear();
 
             mp = null;
             MediaCanvas.Width = this.ActualWidth;
@@ -977,6 +984,54 @@ namespace EEGETAnalysis.GUI
         {
             currentSpectrumSize = (int)((sender as ComboBox).SelectedItem);
             DrawSpectrum();
+        }
+
+        /// <summary>
+        /// Save EEG data to .wav file
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SaveWAVButton_Click(object sender, RoutedEventArgs e)
+        {
+            string defaultFileName = "EEG Waveforms";
+
+            if(!string.IsNullOrEmpty(CsvFilePathTextBox.Text))
+            {
+                defaultFileName = System.IO.Path.GetFileNameWithoutExtension(CsvFilePathTextBox.Text) + "_Electrode_" + currentElectrode.ToString();
+            }
+            // Configure save file dialog box
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = defaultFileName; // Default file name
+            dlg.DefaultExt = ".wav"; // Default file extension
+            dlg.Filter = "Waveform Audio File (.wav)|*.wav"; // Filter files by extension 
+
+            // Show save file dialog box
+            Nullable<bool> result = dlg.ShowDialog();
+
+            // Process save file dialog box results 
+            if (result == true)
+            {
+                // Save document 
+                string filename = dlg.FileName;
+
+                try
+                {
+                    EEGAnalyzer analyzer = null;
+
+                    if (emotionizer.Analyzers.TryGetValue(currentElectrode, out analyzer))
+                    {
+                        analyzer.SaveWavFile(filename);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Could not load EEGAnalyzer. Save failed.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
         }
     }
 }

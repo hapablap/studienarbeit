@@ -58,6 +58,7 @@
                             <CheckBox x:Name="ThetaWaveCheckBox" Foreground="DarkMagenta" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Theta</CheckBox>
                             <CheckBox x:Name="DeltaWaveCheckBox" Foreground="Orange" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Delta</CheckBox>
                             <CheckBox x:Name="NormalizeCheckBox" Checked="EEGWaveCheckBox_CheckedOrUnchecked" Unchecked="EEGWaveCheckBox_CheckedOrUnchecked" Margin="0,5,15,0">Normalize</CheckBox>
+                            <Button x:Name="SaveWAVButton" Click="SaveWAVButton_Click">Export *.wav...</Button>
                         </StackPanel>
                         <Grid Name="EEGGrid" Grid.Row="1"></Grid>
                     </Grid>
