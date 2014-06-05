@@ -24,10 +24,7 @@ namespace EEGETAnalysis.GUI
     /// </summary>
     public partial class MainWindow : Window
     {
-        /// <summary>
-        /// Timer is used to synchronize UI elements and eye tracking data to the video
-        /// </summary>
-        DispatcherTimer timer;
+        #region Media members
 
         /// <summary>
         /// Media player object
@@ -49,22 +46,14 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         private double currentVideoPositionInPercent = 0;
 
+        #endregion
+
+        #region Eye Tracking members
+
         /// <summary>
         /// Red point to show eye focus on canvas
         /// </summary>
         Ellipse eyePoint;
-
-        /// <summary>
-        /// Font size for chart content
-        /// </summary>
-        float chartFontSize = 26f;
-
-        /// <summary>
-        /// Current data list index depending on current video position.
-        /// This value is used to pick list values on the correct position
-        /// depending on the video position. It is calculted on the timer tick.
-        /// </summary>
-        int currentDataIndex = 0;
 
         /// <summary>
         /// Eye x coordinate
@@ -75,6 +64,10 @@ namespace EEGETAnalysis.GUI
         /// Eye y coordinate
         /// </summary>
         double eyeY = 0;
+
+        #endregion
+
+        #region EEG Graph members
 
         /// <summary>
         /// Graph which is used to paint line chart of the EEG
@@ -98,6 +91,20 @@ namespace EEGETAnalysis.GUI
         ZedGraph.GraphPane zedGraphPane;
 
         /// <summary>
+        /// List with waveform colors for the EEG wave forms
+        /// </summary>
+        List<System.Drawing.Color> waveformColors;
+
+        /// <summary>
+        /// Current electrode which is selected for the EEG.
+        /// </summary>
+        Electrode currentElectrode;
+
+        #endregion
+
+        #region Emotion Graph members
+
+        /// <summary>
         /// Graph which is used for emotions
         /// </summary>
         BasicDSP.Graph emotionGraph;
@@ -117,6 +124,10 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         ZedGraph.GraphPane emotionGraphPane;
 
+        #endregion
+
+        #region Spectrum Graph members
+
         /// <summary>
         /// ZedGraphControl is used to paint spectrum. This control is a WinForms control and
         /// implemented by using WindowsFormsIntegration.
@@ -134,16 +145,6 @@ namespace EEGETAnalysis.GUI
         BasicDSP.Graph spectrumGraph;
 
         /// <summary>
-        /// Position of the EEG line.
-        /// </summary>
-        double eegLineXPosition = 0;
-
-        /// <summary>
-        /// Current electrode which is selected for the EEG.
-        /// </summary>
-        Electrode currentElectrode;
-
-        /// <summary>
         /// List of available spectrum sizes
         /// </summary>
         int[] spectrumSizes = { 64, 128, 256 };
@@ -158,15 +159,58 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         Electrode currentSpectrumElectrode;
 
+        #endregion
+
+        #region Activity Graph members
+
+        /// <summary>
+        /// Graph which is used for activities
+        /// </summary>
+        BasicDSP.Graph activityGraph;
+
+        /// <summary>
+        /// ZedGraphControl for activity graph
+        /// </summary>
+        ZedGraph.ZedGraphControl activityZedGraph;
+
+        /// <summary>
+        /// Line for current position on activity graph
+        /// </summary>
+        ZedGraph.LineObj activityLine;
+
+        /// <summary>
+        /// GraphPane for activity graph
+        /// </summary>
+        ZedGraph.GraphPane activityGraphPane;
+
+        #endregion
+
+        /// <summary>
+        /// Timer is used to synchronize UI elements and eye tracking data to the video
+        /// </summary>
+        DispatcherTimer timer;
+
+        /// <summary>
+        /// Font size for chart content
+        /// </summary>
+        float chartFontSize = 26f;
+
+        /// <summary>
+        /// Current data list index depending on current video position.
+        /// This value is used to pick list values on the correct position
+        /// depending on the video position. It is calculted on the timer tick.
+        /// </summary>
+        int currentDataIndex = 0;
+
+        /// <summary>
+        /// Position of the graph lines (all graph lines share the same position).
+        /// </summary>
+        double graphLineXPosition = 0;
+
         /// <summary>
         /// Emotionizer object.
         /// </summary>
         EEGEmotionizer emotionizer = null;
-
-        /// <summary>
-        /// List with waveform colors for the EEG wave forms
-        /// </summary>
-        List<System.Drawing.Color> waveformColors;
 
         /// <summary>
         /// Worker to load CSV data in background
@@ -193,29 +237,6 @@ namespace EEGETAnalysis.GUI
             InitializeComponent();
             MediaCanvas.SizeChanged += MediaCanvas_SizeChanged;
             this.SizeChanged += MainWindow_SizeChanged;
-        }
-
-        void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            if (BusyBar != null)
-            {
-                BusyBar.Margin = new Thickness((MediaCanvas.ActualWidth / 2) - 75, MediaCanvas.ActualHeight / 2, 0, 0);
-            }
-        }
-
-        /// <summary>
-        /// Calculate the canvas width by height to ensure correct video format
-        /// when window size is changed.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        void MediaCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            if (mp != null && mp.NaturalVideoHeight > 0)
-            {
-                videoSizeInPercent = (e.NewSize.Height / mp.NaturalVideoHeight);
-                MediaCanvas.Width = mp.NaturalVideoWidth * videoSizeInPercent;
-            }
         }
 
         /// <summary>
@@ -305,7 +326,7 @@ namespace EEGETAnalysis.GUI
             eegGraph = new BasicDSP.Graph(eegZedGraph.CreateGraphics(), eegZedGraph);
 
             zedGraphPane = eegZedGraph.GraphPane;
-            eegLine = new ZedGraph.LineObj(System.Drawing.Color.Red, eegLineXPosition, zedGraphPane.YAxis.Scale.Min, eegLineXPosition, zedGraphPane.YAxis.Scale.Max);
+            eegLine = new ZedGraph.LineObj(System.Drawing.Color.Red, graphLineXPosition, zedGraphPane.YAxis.Scale.Min, graphLineXPosition, zedGraphPane.YAxis.Scale.Max);
             eegLine.Line.Width = 1f;
             zedGraphPane.GraphObjList.Add(eegLine);
 
@@ -322,7 +343,7 @@ namespace EEGETAnalysis.GUI
             emotionGraph = new BasicDSP.Graph(emotionZedGraph.CreateGraphics(), emotionZedGraph);
 
             emotionGraphPane = emotionZedGraph.GraphPane;
-            emotionLine = new ZedGraph.LineObj(System.Drawing.Color.Red, eegLineXPosition, emotionGraphPane.YAxis.Scale.Min, eegLineXPosition, emotionGraphPane.YAxis.Scale.Max);
+            emotionLine = new ZedGraph.LineObj(System.Drawing.Color.Red, graphLineXPosition, emotionGraphPane.YAxis.Scale.Min, graphLineXPosition, emotionGraphPane.YAxis.Scale.Max);
             emotionLine.Line.Width = 1f;
             emotionGraphPane.GraphObjList.Add(emotionLine);
 
@@ -365,6 +386,67 @@ namespace EEGETAnalysis.GUI
 
             MediaCanvas.Children.Add(BusyBar);
         }
+
+        /// <summary>
+        /// Timer tick: Get the eye tracking data depending on video position
+        /// and draw the eye point on this position.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void timer_Tick(object sender, EventArgs e)
+        {
+            // Synchronize slider position with video
+            Slider.Value = mp.Position.TotalSeconds;
+
+            List<EEGSample> samples = emotionizer.Sampler.GetAllGoodSamples();
+
+            currentDataIndex = (int)(samples.Count * currentVideoPositionInPercent);
+
+            // first row contains identifier, skip it
+            if (currentDataIndex < 1)
+            {
+                currentDataIndex = 1;
+            }
+
+            // on 100% it will be out of range, because counting index begins at 0 -> prevent
+            if (currentDataIndex >= samples.Count)
+            {
+                currentDataIndex = samples.Count - 1;
+            }
+
+            // Eye tracking (BEGIN)
+            eyeX = samples[currentDataIndex].eyeX * videoSizeInPercent;
+            eyeY = samples[currentDataIndex].eyeY * videoSizeInPercent;
+
+            if (eyeX < 0)
+            {
+                eyeX = eyePoint.ActualWidth;
+            }
+
+            if (eyeY < 0)
+            {
+                eyeY = eyePoint.ActualHeight;
+            }
+
+            if (eyeX > MediaCanvas.ActualWidth)
+            {
+                eyeX = MediaCanvas.ActualWidth - eyePoint.ActualWidth;
+            }
+
+            if (eyeY > MediaCanvas.ActualHeight)
+            {
+                eyeY = MediaCanvas.ActualHeight - eyePoint.ActualHeight;
+            }
+
+            eyePoint.Margin = new Thickness(eyeX, eyeY, 0, 0);
+            // Eye tracking (END)
+
+            graphLineXPosition = (Convert.ToDouble(mp.Position.Milliseconds) * 0.001) + Convert.ToDouble(mp.Position.Seconds);
+            DrawEEGLine();
+            DrawEmotionLine();
+        }
+
+        #region Worker
 
         /// <summary>
         /// Load CSV data in background task
@@ -459,16 +541,9 @@ namespace EEGETAnalysis.GUI
             BusyBar.IsBusy = false;
         }
 
-        /// <summary>
-        /// ComboBox selection changed for the current EEG electrode.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        void CurrentWaveComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            currentElectrode = (Electrode)((sender as ComboBox).SelectedItem);
-            DrawWaveforms();
-        }
+        #endregion
+
+        #region Emotion Graph functions
 
         /// <summary>
         /// Draw emotion line graph with different line colors.
@@ -536,6 +611,46 @@ namespace EEGETAnalysis.GUI
         }
 
         /// <summary>
+        /// Draw the Emotion Line on the right position depending on the video position
+        /// </summary>
+        private void DrawEmotionLine()
+        {
+            if (csvDataProcessed)
+            {
+                emotionGraphPane.GraphObjList.Remove(emotionLine);
+                emotionLine = new ZedGraph.LineObj(System.Drawing.Color.Red, graphLineXPosition, emotionGraphPane.YAxis.Scale.Min, graphLineXPosition, emotionGraphPane.YAxis.Scale.Max);
+                emotionLine.Line.Width = 1f;
+                emotionGraphPane.GraphObjList.Add(emotionLine);
+                emotionZedGraph.Refresh();
+            }
+        }
+
+        /// <summary>
+        /// Draw emotions on ZedGraph
+        /// </summary>
+        private void DrawEmotions()
+        {
+            if (csvDataProcessed)
+            {
+                emotionGraph.PlotClear(1);
+
+                BasicDSP.Waveform signal;
+
+                foreach (KeyValuePair<Emotion, BasicDSP.Waveform> emotion in emotionizer.Emotions)
+                {
+                    signal = emotion.Value;
+                    emotionGraph.PlotWaveform(1, ref signal, emotion.Key.ToString());
+                }
+
+                EmotionZedGraphRefresh();
+            }
+        }
+
+        #endregion
+
+        #region EEG Graph functions
+
+        /// <summary>
         /// Draw the EEGData. Refresh is called when current electrode is changed.
         /// </summary>
         private void EEGZedGraphRefresh()
@@ -563,85 +678,6 @@ namespace EEGETAnalysis.GUI
         }
 
         /// <summary>
-        /// Set font size for the spectrum zed graph
-        /// </summary>
-        private void SpectrumZedGraphRefresh()
-        {
-            ZedGraph.GraphPane myPane = spectrumZedGraph.GraphPane;
-
-            foreach (ZedGraph.LineItem lineItem in myPane.CurveList)
-            {
-                lineItem.Line.IsSmooth = true;
-            }
-
-            myPane.XAxis.Scale.FontSpec.Size = chartFontSize;
-            myPane.XAxis.Title.FontSpec.Size = chartFontSize;
-            myPane.YAxis.Scale.FontSpec.Size = chartFontSize;
-            myPane.YAxis.Title.FontSpec.Size = chartFontSize;
-            myPane.Title.Text = " ";
-            spectrumZedGraph.Refresh();
-        }
-
-        /// <summary>
-        /// Timer tick: Get the eye tracking data depending on video position
-        /// and draw the eye point on this position.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        void timer_Tick(object sender, EventArgs e)
-        {
-            // Synchronize slider position with video
-            Slider.Value = mp.Position.TotalSeconds;
-
-            List<EEGSample> samples = emotionizer.Sampler.GetAllGoodSamples();
-            
-            currentDataIndex = (int)(samples.Count * currentVideoPositionInPercent);
-
-            // first row contains identifier, skip it
-            if (currentDataIndex < 1)
-            {
-                currentDataIndex = 1;
-            }
-
-            // on 100% it will be out of range, because counting index begins at 0 -> prevent
-            if (currentDataIndex >= samples.Count)
-            {
-                currentDataIndex = samples.Count - 1;
-            }
-
-            // Eye tracking (BEGIN)
-            eyeX = samples[currentDataIndex].eyeX * videoSizeInPercent;
-            eyeY = samples[currentDataIndex].eyeY * videoSizeInPercent;
-
-            if(eyeX < 0)
-            {
-                eyeX = eyePoint.ActualWidth;
-            }
-
-            if(eyeY < 0)
-            {
-                eyeY = eyePoint.ActualHeight;
-            }
-
-            if(eyeX > MediaCanvas.ActualWidth)
-            {
-                eyeX = MediaCanvas.ActualWidth - eyePoint.ActualWidth;
-            }
-
-            if(eyeY > MediaCanvas.ActualHeight)
-            {
-                eyeY = MediaCanvas.ActualHeight - eyePoint.ActualHeight;
-            }
-
-            eyePoint.Margin = new Thickness(eyeX, eyeY, 0, 0);
-            // Eye tracking (END)
-
-            eegLineXPosition = (Convert.ToDouble(mp.Position.Milliseconds) * 0.001) + Convert.ToDouble(mp.Position.Seconds);
-            DrawEEGLine();
-            DrawEmotionLine();
-        }
-
-        /// <summary>
         /// Draw the EEGLine on the right position depending on the video position
         /// </summary>
         private void DrawEEGLine()
@@ -649,137 +685,10 @@ namespace EEGETAnalysis.GUI
             if (csvDataProcessed)
             {
                 zedGraphPane.GraphObjList.Remove(eegLine);
-                eegLine = new ZedGraph.LineObj(System.Drawing.Color.Red, eegLineXPosition, zedGraphPane.YAxis.Scale.Min, eegLineXPosition, zedGraphPane.YAxis.Scale.Max);
+                eegLine = new ZedGraph.LineObj(System.Drawing.Color.Red, graphLineXPosition, zedGraphPane.YAxis.Scale.Min, graphLineXPosition, zedGraphPane.YAxis.Scale.Max);
                 eegLine.Line.Width = 1f;
                 zedGraphPane.GraphObjList.Add(eegLine);
                 eegZedGraph.Refresh();
-            }
-        }
-
-        /// <summary>
-        /// Draw the Emotion Line on the right position depending on the video position
-        /// </summary>
-        private void DrawEmotionLine()
-        {
-            if (csvDataProcessed)
-            {
-                emotionGraphPane.GraphObjList.Remove(emotionLine);
-                emotionLine = new ZedGraph.LineObj(System.Drawing.Color.Red, eegLineXPosition, emotionGraphPane.YAxis.Scale.Min, eegLineXPosition, emotionGraphPane.YAxis.Scale.Max);
-                emotionLine.Line.Width = 1f;
-                emotionGraphPane.GraphObjList.Add(emotionLine);
-                emotionZedGraph.Refresh();
-            }
-        }
-
-        /// <summary>
-        /// Move video position to slider position
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            mp.Position = TimeSpan.FromSeconds(Slider.Value);
-            
-            // Calculate the current video position in percent. This value is used
-            // for different calculations
-            currentVideoPositionInPercent = mp.Position.Seconds / mediaDuration;
-
-            // protection, do not go higher then 100%
-            if (currentVideoPositionInPercent > 100)
-            {
-                currentVideoPositionInPercent = 100;
-            }
-
-            DrawSpectrum();
-            
-            TimeTextBlock.Text = String.Format("{0:00}", mp.Position.Hours) + ":" + String.Format("{0:00}", mp.Position.Minutes) + ":" + String.Format("{0:00}", mp.Position.Seconds);
-        }
-
-        /// <summary>
-        /// Select CSV input file
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void SelectCsvFileButton_Click(object sender, RoutedEventArgs e)
-        {
-            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
-
-            dlg.DefaultExt = ".csv";
-            dlg.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
-
-            Nullable<bool> result = dlg.ShowDialog();
-
-            if (result == true)
-            {
-                string filename = dlg.FileName;
-                CsvFilePathTextBox.Text = filename;
-            }
-
-            enableStartAnalysisButtonIfPathsAreSet();
-        }
-
-        /// <summary>
-        /// Select media input file
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void SelectMediaFileButton_Click(object sender, RoutedEventArgs e)
-        {
-            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
-
-            dlg.DefaultExt = ".mp4";
-            dlg.Filter = "mp4 files (*.mp4)|*.mp4|All files (*.*)|*.*";
-
-            Nullable<bool> result = dlg.ShowDialog();
-
-            if (result == true)
-            {
-                string filename = dlg.FileName;
-                MediaFilePathTextBox.Text = filename;
-            }
-
-            enableStartAnalysisButtonIfPathsAreSet();
-        }
-
-        /// <summary>
-        /// Draw spectrum on ZedGraph
-        /// </summary>
-        private void DrawSpectrum()
-        {
-            if (csvDataProcessed)
-            {
-                spectrumGraph.PlotClear(1);
-
-                BasicDSP.Waveform waveform = emotionizer.Sampler.GetEEGWaveform(currentSpectrumElectrode);
-                EEGAnalyzer analyzer = new EEGAnalyzer(waveform);
-
-                int spectrumIndex = Convert.ToInt32(Convert.ToDouble(analyzer.Waveform.Count) * currentVideoPositionInPercent);
-
-                BasicDSP.Spectrum spectrum = analyzer.GetSpectrum(spectrumIndex, currentSpectrumSize);
-                spectrumGraph.PlotDbSpectrum(1, ref spectrum, "");
-
-                SpectrumZedGraphRefresh();
-            }
-        }
-
-        /// <summary>
-        /// Draw emotions on ZedGraph
-        /// </summary>
-        private void DrawEmotions()
-        {
-            if (csvDataProcessed)
-            {
-                emotionGraph.PlotClear(1);
-
-                BasicDSP.Waveform signal;
-
-                foreach (KeyValuePair<Emotion, BasicDSP.Waveform> emotion in emotionizer.Emotions)
-                {
-                    signal = emotion.Value;
-                    emotionGraph.PlotWaveform(1, ref signal, emotion.Key.ToString());
-                }
-
-                EmotionZedGraphRefresh();
             }
         }
 
@@ -841,32 +750,162 @@ namespace EEGETAnalysis.GUI
             }
         }
 
+        #endregion
+
+        #region Spectrum Graph functions
+
         /// <summary>
-        /// Media ended method. Stop media and reset media position.
+        /// Set font size for the spectrum zed graph
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        void mp_MediaEnded(object sender, EventArgs e)
+        private void SpectrumZedGraphRefresh()
         {
-            mp.Stop();
-            mp.Position = TimeSpan.FromSeconds(0);
-            eyePoint.Visibility = Visibility.Hidden;
+            ZedGraph.GraphPane myPane = spectrumZedGraph.GraphPane;
+
+            foreach (ZedGraph.LineItem lineItem in myPane.CurveList)
+            {
+                lineItem.Line.IsSmooth = true;
+            }
+
+            myPane.XAxis.Scale.FontSpec.Size = chartFontSize;
+            myPane.XAxis.Title.FontSpec.Size = chartFontSize;
+            myPane.YAxis.Scale.FontSpec.Size = chartFontSize;
+            myPane.YAxis.Title.FontSpec.Size = chartFontSize;
+            myPane.Title.Text = " ";
+            spectrumZedGraph.Refresh();
         }
 
         /// <summary>
-        /// Get some video values when media is opened
+        /// Draw spectrum on ZedGraph
+        /// </summary>
+        private void DrawSpectrum()
+        {
+            if (csvDataProcessed)
+            {
+                spectrumGraph.PlotClear(1);
+
+                BasicDSP.Waveform waveform = emotionizer.Sampler.GetEEGWaveform(currentSpectrumElectrode);
+                EEGAnalyzer analyzer = new EEGAnalyzer(waveform);
+
+                int spectrumIndex = Convert.ToInt32(Convert.ToDouble(analyzer.Waveform.Count) * currentVideoPositionInPercent);
+
+                BasicDSP.Spectrum spectrum = analyzer.GetSpectrum(spectrumIndex, currentSpectrumSize);
+                spectrumGraph.PlotDbSpectrum(1, ref spectrum, "");
+
+                SpectrumZedGraphRefresh();
+            }
+        }
+
+        #endregion
+
+        #region GUI events
+
+        /// <summary>
+        /// ComboBox selection changed for the current EEG electrode.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        void mp_MediaOpened(object sender, EventArgs e)
+        void CurrentWaveComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            TimeSpan ts = mp.NaturalDuration.TimeSpan;
-            mediaDuration = ts.TotalSeconds;
-            Slider.Maximum = mediaDuration;
+            currentElectrode = (Electrode)((sender as ComboBox).SelectedItem);
+            DrawWaveforms();
+        }
 
-            videoSizeInPercent = (MediaCanvas.ActualHeight / mp.NaturalVideoHeight);
+        /// <summary>
+        /// Size of the main window changed. Position BusyBar on center.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (BusyBar != null)
+            {
+                BusyBar.Margin = new Thickness((MediaCanvas.ActualWidth / 2) - 75, MediaCanvas.ActualHeight / 2, 0, 0);
+            }
+        }
 
-            MediaCanvas.Width = mp.NaturalVideoWidth * videoSizeInPercent;
+        /// <summary>
+        /// Calculate the canvas width by height to ensure correct video format
+        /// when window size is changed.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void MediaCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (mp != null && mp.NaturalVideoHeight > 0)
+            {
+                videoSizeInPercent = (e.NewSize.Height / mp.NaturalVideoHeight);
+                MediaCanvas.Width = mp.NaturalVideoWidth * videoSizeInPercent;
+            }
+        }
+
+        /// <summary>
+        /// Move video position to slider position
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            mp.Position = TimeSpan.FromSeconds(Slider.Value);
+
+            // Calculate the current video position in percent. This value is used
+            // for different calculations
+            currentVideoPositionInPercent = mp.Position.Seconds / mediaDuration;
+
+            // protection, do not go higher then 100%
+            if (currentVideoPositionInPercent > 100)
+            {
+                currentVideoPositionInPercent = 100;
+            }
+
+            DrawSpectrum();
+
+            TimeTextBlock.Text = String.Format("{0:00}", mp.Position.Hours) + ":" + String.Format("{0:00}", mp.Position.Minutes) + ":" + String.Format("{0:00}", mp.Position.Seconds);
+        }
+
+        /// <summary>
+        /// Select CSV input file
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SelectCsvFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+
+            dlg.DefaultExt = ".csv";
+            dlg.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
+
+            Nullable<bool> result = dlg.ShowDialog();
+
+            if (result == true)
+            {
+                string filename = dlg.FileName;
+                CsvFilePathTextBox.Text = filename;
+            }
+
+            enableStartAnalysisButtonIfPathsAreSet();
+        }
+
+        /// <summary>
+        /// Select media input file
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SelectMediaFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+
+            dlg.DefaultExt = ".mp4";
+            dlg.Filter = "mp4 files (*.mp4)|*.mp4|All files (*.*)|*.*";
+
+            Nullable<bool> result = dlg.ShowDialog();
+
+            if (result == true)
+            {
+                string filename = dlg.FileName;
+                MediaFilePathTextBox.Text = filename;
+            }
+
+            enableStartAnalysisButtonIfPathsAreSet();
         }
 
         /// <summary>
@@ -893,7 +932,7 @@ namespace EEGETAnalysis.GUI
             SelectCsvFileButton.IsEnabled = true;
             SelectMediaFileButton.IsEnabled = true;
             csvDataProcessed = false;
-            
+
             waveformColors.Clear();
 
             mp = null;
@@ -964,6 +1003,11 @@ namespace EEGETAnalysis.GUI
             DrawWaveforms();
         }
 
+        private void ActivityCheckBox_CheckedOrUnchecked(object sender, RoutedEventArgs e)
+        {
+
+        }
+
         /// <summary>
         /// Set the current selected electrode for spectrum
         /// </summary>
@@ -995,7 +1039,7 @@ namespace EEGETAnalysis.GUI
         {
             string defaultFileName = "EEG Waveforms";
 
-            if(!string.IsNullOrEmpty(CsvFilePathTextBox.Text))
+            if (!string.IsNullOrEmpty(CsvFilePathTextBox.Text))
             {
                 defaultFileName = System.IO.Path.GetFileNameWithoutExtension(CsvFilePathTextBox.Text) + "_Electrode_" + currentElectrode.ToString();
             }
@@ -1033,5 +1077,39 @@ namespace EEGETAnalysis.GUI
                 }
             }
         }
+
+        #endregion
+
+        #region Media functions
+
+        /// <summary>
+        /// Media ended method. Stop media and reset media position.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void mp_MediaEnded(object sender, EventArgs e)
+        {
+            mp.Stop();
+            mp.Position = TimeSpan.FromSeconds(0);
+            eyePoint.Visibility = Visibility.Hidden;
+        }
+
+        /// <summary>
+        /// Get some video values when media is opened
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void mp_MediaOpened(object sender, EventArgs e)
+        {
+            TimeSpan ts = mp.NaturalDuration.TimeSpan;
+            mediaDuration = ts.TotalSeconds;
+            Slider.Maximum = mediaDuration;
+
+            videoSizeInPercent = (MediaCanvas.ActualHeight / mp.NaturalVideoHeight);
+
+            MediaCanvas.Width = mp.NaturalVideoWidth * videoSizeInPercent;
+        }
+
+        #endregion
     }
 }
