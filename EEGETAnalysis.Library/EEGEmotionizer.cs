@@ -9,8 +9,7 @@ namespace EEGETAnalysis.Library
 {
     public class EEGEmotionizer
     {
-
-        Sampler sampler;
+        public Sampler Sampler { get; private set; }
 
         public Dictionary<Electrode, EEGAnalyzer> Analyzers { get; private set; }
 
@@ -18,12 +17,11 @@ namespace EEGETAnalysis.Library
 
         public Dictionary<Emotion, Waveform> Emotions { get; private set; }
 
-
         public EEGEmotionizer(Sampler sampler)
         {
-            this.sampler = sampler;
+            Sampler = sampler;
 
-            Dictionary<Electrode, Waveform> eegWaveforms = sampler.GetEEGWaveforms();
+            Dictionary<Electrode, Waveform> eegWaveforms = Sampler.GetEEGWaveforms();
 
             Analyzers = new Dictionary<Electrode, EEGAnalyzer>();
             foreach (KeyValuePair<Electrode, Waveform> eegWaveform in eegWaveforms)
@@ -34,7 +32,6 @@ namespace EEGETAnalysis.Library
             CalculateAverageActivity();
             CalculateEmotions();
         }
-
 
         /// <summary>
         /// Bildet den Durchschnitt der Frequenzbandaktivität aus allen verfügbaren Elektroden und speichert ihn zwischen.
@@ -54,13 +51,11 @@ namespace EEGETAnalysis.Library
             
         }
   
-
         /// <summary>
         /// Berechnet aus der Aktivität der Frequenzbänder die Ausprägung der Basisemotionen im zeitlichen Verlauf und speichert ihn zwischen.
         /// </summary>
         private void CalculateEmotions()
         {
-
             Waveform alphaActivity = EEGUtils.Normalize(AverageActivity[EEGBand.ALPHA]);
             Waveform betaActivity = EEGUtils.Normalize(AverageActivity[EEGBand.BETA]);
             Waveform thetaActivity = EEGUtils.Normalize(AverageActivity[EEGBand.THETA]);
@@ -101,8 +96,6 @@ namespace EEGETAnalysis.Library
             }
             
             this.Emotions = emotions;
-
         }
-
     }
 }
