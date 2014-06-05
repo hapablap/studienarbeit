@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using EEGETAnalysis.Library;
 using System.Windows.Threading;
 using System.Threading;
+using System.ComponentModel;
 
 namespace EEGETAnalysis.GUI
 {
@@ -39,16 +40,9 @@ namespace EEGETAnalysis.GUI
         double mediaDuration = 0;
 
         /// <summary>
-        /// BeGaze CSV data
+        /// Sampler instance
         /// </summary>
-        List<List<string>> csvData = null;
-
         Sampler sampler = null;
-
-        /// <summary>
-        /// Sample data from CSV
-        /// </summary>
-        List<EEGSample> samples = null;
 
         /// <summary>
         /// Video size in percent. Value is used to calculate video size on window resize.
@@ -86,11 +80,6 @@ namespace EEGETAnalysis.GUI
         /// Eye y coordinate
         /// </summary>
         double eyeY = 0;
-
-        /// <summary>
-        /// Sample rate which was used for the measure. Value is loaded from CSV file.
-        /// </summary>
-        int sampleRate;
 
         /// <summary>
         /// Graph which is used to paint line chart of the EEG
@@ -159,6 +148,9 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         Electrode currentElectrode;
 
+        /// <summary>
+        /// List of available spectrum sizes
+        /// </summary>
         int[] spectrumSizes = { 64, 128, 256 };
 
         /// <summary>
@@ -176,7 +168,15 @@ namespace EEGETAnalysis.GUI
         /// </summary>
         EEGEmotionizer emotionizer = null;
 
+        /// <summary>
+        /// List with waveform colors for the EEG wave forms
+        /// </summary>
         List<System.Drawing.Color> waveformColors;
+
+        /// <summary>
+        /// Worker to load CSV data in background
+        /// </summary>
+        private readonly BackgroundWorker worker = new BackgroundWorker();
 
         /// <summary>
         /// Bool value indicates if CSV data was processed. This value can be used
@@ -186,12 +186,26 @@ namespace EEGETAnalysis.GUI
         bool csvDataProcessed = false;
 
         /// <summary>
+        /// BusyBar - the BusyBar is added in code because otherwise the XAML view shows an error
+        /// </summary>
+        Microsoft.Windows.Controls.BusyIndicator BusyBar = null;
+
+        /// <summary>
         /// Window construct. Initialize componentes and events.
         /// </summary>
         public MainWindow()
         {
             InitializeComponent();
             MediaCanvas.SizeChanged += MediaCanvas_SizeChanged;
+            this.SizeChanged += MainWindow_SizeChanged;
+        }
+
+        void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (BusyBar != null)
+            {
+                BusyBar.Margin = new Thickness((MediaCanvas.ActualWidth / 2) - 75, MediaCanvas.ActualHeight / 2, 0, 0);
+            }
         }
 
         /// <summary>
@@ -217,8 +231,8 @@ namespace EEGETAnalysis.GUI
             if (!String.IsNullOrEmpty(CsvFilePathTextBox.Text) && !String.IsNullOrEmpty(MediaFilePathTextBox.Text))
             {
                 BusyBar.IsBusy = true;
-                ProcessCSVData();
-                BusyBar.IsBusy = false;
+                CSVWorkerArgs args = new CSVWorkerArgs() { CsvFilePath = CsvFilePathTextBox.Text };
+                worker.RunWorkerAsync(args);
             }
         }
 
@@ -335,6 +349,110 @@ namespace EEGETAnalysis.GUI
             {
                 CurrentSpectrumSizeComboBox.Items.Add(value);
             }
+
+            worker.DoWork += worker_DoWork;
+            worker.RunWorkerCompleted += worker_RunWorkerCompleted;
+
+            BusyBar = new Microsoft.Windows.Controls.BusyIndicator();
+            BusyBar.BusyContent = "Loading CSV data...";
+            BusyBar.Margin = new Thickness((MediaCanvas.ActualWidth / 2) - 75, MediaCanvas.ActualHeight / 2, 0, 0);
+
+            MediaCanvas.Children.Add(BusyBar);
+        }
+
+        /// <summary>
+        /// Load CSV data in background task
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void worker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            CSVWorkerArgs args = (CSVWorkerArgs)e.Argument;
+            CSVWorkerResult result = new CSVWorkerResult();
+            result.Success = false;
+
+            try
+            {
+                CsvParser parser = new CsvParser(args.CsvFilePath);
+                List<List<string>> csvData = parser.Parse();
+
+                int sampleRate = Convert.ToInt32(parser.GetMetaDataDictionary().GetValue("Sample Rate"));
+
+                Sampler sampler = new Sampler(csvData, sampleRate);
+                result.Sampler = sampler;
+                result.Emotionizer = new EEGEmotionizer(sampler);
+                result.Success = true;
+            }
+            catch (System.IO.IOException ex)
+            {
+                result.ErrorMessage = ex.Message;
+                result.Success = false;
+            }
+
+            e.Result = result;
+        }
+
+        /// <summary>
+        /// CSV data load completed, adjust GUI if data was loaded successfully
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            CSVWorkerResult workerResult = (CSVWorkerResult)e.Result;
+            if (workerResult.Success)
+            {
+                try
+                {
+                    emotionizer = workerResult.Emotionizer;
+                    sampler = workerResult.Sampler;
+
+                    mp = new MediaPlayer();
+                    mp.MediaOpened += mp_MediaOpened;
+                    mp.MediaEnded += mp_MediaEnded;
+
+                    mp.Open(new Uri(MediaFilePathTextBox.Text));
+
+                    VideoDrawing vd = new VideoDrawing();
+                    vd.Player = mp;
+                    vd.Rect = new Rect(0, 0, 100, 100);
+
+                    DrawingBrush db = new DrawingBrush(vd);
+
+                    MediaCanvas.Background = db;
+
+                    SetControlButtonsEnabled(true);
+
+                    SelectCsvFileButton.IsEnabled = false;
+                    SelectMediaFileButton.IsEnabled = false;
+
+                    ResetButton.IsEnabled = true;
+
+                    csvDataProcessed = true;
+
+                    eegGraph.PlotClear(1);
+
+                    EEGZedGraphRefresh();
+
+                    CurrentWaveComboBox.SelectedIndex = 0;
+                    CurrentSpectrumComboBox.SelectedIndex = 0;
+                    CurrentSpectrumSizeComboBox.SelectedIndex = 1;
+                    OriginalWaveCheckBox.IsChecked = true;
+
+                    DrawSpectrum();
+                    DrawEmotions();
+                }
+                catch (System.IO.IOException ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+            else
+            {
+                MessageBox.Show(workerResult.ErrorMessage);
+            }
+
+            BusyBar.IsBusy = false;
         }
 
         /// <summary>
@@ -470,6 +588,8 @@ namespace EEGETAnalysis.GUI
         {
             // Synchronize slider position with video
             Slider.Value = mp.Position.TotalSeconds;
+
+            List<EEGSample> samples = sampler.GetAllGoodSamples();
             
             currentDataIndex = (int)(samples.Count * currentVideoPositionInPercent);
 
@@ -615,65 +735,6 @@ namespace EEGETAnalysis.GUI
             }
 
             enableStartAnalysisButtonIfPathsAreSet();
-        }
-
-        /// <summary>
-        /// Process / parse the CSV file, open the video, add data to chart, enable controls.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ProcessCSVData()
-        {
-            mp = new MediaPlayer();
-            mp.MediaOpened += mp_MediaOpened;
-            mp.MediaEnded += mp_MediaEnded;
-
-            mp.Open(new Uri(MediaFilePathTextBox.Text));
-
-            VideoDrawing vd = new VideoDrawing();
-            vd.Player = mp;
-            vd.Rect = new Rect(0, 0, 100, 100);
-
-            DrawingBrush db = new DrawingBrush(vd);
-
-            MediaCanvas.Background = db;
-
-            try
-            {
-                CsvParser parser = new CsvParser(CsvFilePathTextBox.Text);
-                csvData = parser.Parse();
-
-                sampleRate = Convert.ToInt32(parser.GetMetaDataDictionary().GetValue("Sample Rate"));
-
-                sampler = new Sampler(csvData, sampleRate);
-                emotionizer = new EEGEmotionizer(sampler);
-                samples = sampler.GetAllGoodSamples();
-
-                SetControlButtonsEnabled(true);
-
-                SelectCsvFileButton.IsEnabled = false;
-                SelectMediaFileButton.IsEnabled = false;
-
-                ResetButton.IsEnabled = true;
-
-                csvDataProcessed = true;
-
-                eegGraph.PlotClear(1);
-
-                EEGZedGraphRefresh();
-
-                CurrentWaveComboBox.SelectedIndex = 0;
-                CurrentSpectrumComboBox.SelectedIndex = 0;
-                CurrentSpectrumSizeComboBox.SelectedIndex = 1;
-                OriginalWaveCheckBox.IsChecked = true;
-
-                DrawSpectrum();
-                DrawEmotions();
-            }
-            catch (System.IO.IOException ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         /// <summary>
@@ -827,6 +888,11 @@ namespace EEGETAnalysis.GUI
             SelectCsvFileButton.IsEnabled = true;
             SelectMediaFileButton.IsEnabled = true;
             csvDataProcessed = false;
+
+            mp = null;
+            MediaCanvas.Width = this.ActualWidth;
+            DrawingBrush myDrawingBrush = new DrawingBrush();
+            MediaCanvas.Background = myDrawingBrush;
         }
 
         /// <summary>

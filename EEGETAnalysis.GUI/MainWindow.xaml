@@ -39,7 +39,7 @@
             </StackPanel>
         </GroupBox>
         <Canvas x:Name="MediaCanvas" Grid.Row="1">
-            <wpfx:BusyIndicator Name="BusyBar" BusyContent="Loading CSV data..."></wpfx:BusyIndicator>
+            <!--<wpfx:BusyIndicator Name="BusyBar" BusyContent="Loading CSV data..."></wpfx:BusyIndicator>-->
         </Canvas>
         <GroupBox Grid.Row="2" Header="EEG Data">
             <TabControl x:Name="EEGDataTabControl">
