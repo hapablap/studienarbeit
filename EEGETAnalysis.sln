@@ -9,13 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EEGETAnalysis.GUI", "EEGETA
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EmotivEPOCMeasureConsoleApplication", "EmotivEPOCMeasureConsoleApplication\EmotivEPOCMeasureConsoleApplication.vcxproj", "{7277535B-B240-4E8C-9EBB-F93AB8D658DF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestInstances", "TestInstances", "{DCE91F8F-5560-4560-AA98-077337C99E4B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Experiment1", "Experiment1", "{75FB8A25-CA5A-4CCD-990E-6A939E97A15E}"
-	ProjectSection(SolutionItems) = preProject
-		..\Testdaten\Apple iPhone 5 - TV Ad - Music Every Day.mp4 = ..\Testdaten\Apple iPhone 5 - TV Ad - Music Every Day.mp4
-		..\Testdaten\iPhone5_Ad_Thomas_mit_EEG.csv = ..\Testdaten\iPhone5_Ad_Thomas_mit_EEG.csv
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestInstances", "TestInstances\TestInstances.csproj", "{75B160F4-733E-4550-891D-E3A86FDB607E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,11 +51,18 @@ Global
 		{7277535B-B240-4E8C-9EBB-F93AB8D658DF}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{7277535B-B240-4E8C-9EBB-F93AB8D658DF}.Release|Win32.ActiveCfg = Release|Win32
 		{7277535B-B240-4E8C-9EBB-F93AB8D658DF}.Release|Win32.Build.0 = Release|Win32
+		{75B160F4-733E-4550-891D-E3A86FDB607E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75B160F4-733E-4550-891D-E3A86FDB607E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75B160F4-733E-4550-891D-E3A86FDB607E}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{75B160F4-733E-4550-891D-E3A86FDB607E}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{75B160F4-733E-4550-891D-E3A86FDB607E}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{75B160F4-733E-4550-891D-E3A86FDB607E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75B160F4-733E-4550-891D-E3A86FDB607E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75B160F4-733E-4550-891D-E3A86FDB607E}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{75B160F4-733E-4550-891D-E3A86FDB607E}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{75B160F4-733E-4550-891D-E3A86FDB607E}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{75FB8A25-CA5A-4CCD-990E-6A939E97A15E} = {DCE91F8F-5560-4560-AA98-077337C99E4B}
 	EndGlobalSection
 EndGlobal
