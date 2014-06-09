@@ -68,7 +68,7 @@ namespace EEGETAnalysis.Library
         /// <returns>Das komplexwertige Spektrum. Seine Länge ist fftSize / 2.</returns>
         public Spectrum GetSpectrum(int beginSample, int fftSize)
         {
-            // 1 Sekunde langes Stück herausschneiden
+            // Stück aus Waveform herausschneiden
             Waveform cutWaveform = Waveform.Cut(beginSample, fftSize);
 
             // Fensterfunktion anwenden, um Leck-Effekte an den Signalrändern zu vermeiden
@@ -109,10 +109,6 @@ namespace EEGETAnalysis.Library
                 // die Samplerate der Activity-Waveform soll 1 Hz sein.
                 int activitySampleRate = 1;
 
-                // finde die Indizes im diskreten Spektrum, die Ober- und Unterkante des Frequenzbands darstellen
-                int minFreqIndex = FindSpectrumIndexForFreq(minFreq, fftSize / 2, (int)sampleRate);
-                int maxFreqIndex = FindSpectrumIndexForFreq(maxFreq, fftSize / 2, (int)sampleRate);
-
                 // wir benötigen eine leere Waveform
                 Waveform activityWaveform = new Waveform(0, activitySampleRate);
 
@@ -120,6 +116,11 @@ namespace EEGETAnalysis.Library
                 for (int i = Waveform.First; i <= Waveform.Last - fftSize; i = i + ((int)sampleRate / activitySampleRate))
                 {
                     Waveform amplitudeSpectrum = GetAmplitudeSpectrum(i, fftSize);
+
+                    // finde die Indizes im diskreten Spektrum, die Ober- und Unterkante des Frequenzbands darstellen
+                    int minFreqIndex = FindSpectrumIndexForFreq(minFreq, amplitudeSpectrum, (int)sampleRate);
+                    int maxFreqIndex = FindSpectrumIndexForFreq(maxFreq, amplitudeSpectrum, (int)sampleRate);
+
                     double activityValue = 0;
                     for (int j = minFreqIndex; j <= maxFreqIndex; j++)
                     {
@@ -145,12 +146,12 @@ namespace EEGETAnalysis.Library
         /// Findet zu einer Frequenz den nächstkleineren Index im diskreten Spektrum.
         /// </summary>
         /// <param name="freq">Frequenz</param>
-        /// <param name="spectrumLength">Länge des Spektrums</param>
+        /// <param name="realSpectrum">reellwertiges Halbspektrum</param>
         /// <param name="sampleRate">Samplerate</param>
         /// <returns>Index im diskreten Spektrum</returns>
-        private static int FindSpectrumIndexForFreq(double freq, int spectrumLength, int sampleRate)
+        private static int FindSpectrumIndexForFreq(double freq, Waveform realSpectrum, int sampleRate)
         {
-            return (int)Math.Floor(freq / (sampleRate / 2) * spectrumLength);
+            return (int) Math.Floor((freq / (sampleRate / 2)) * realSpectrum.Count) + realSpectrum.First;
         }
 
 
