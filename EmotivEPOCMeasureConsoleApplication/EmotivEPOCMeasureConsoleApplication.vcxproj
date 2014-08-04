@@ -78,6 +78,10 @@
     <None Include="edk.dll" />
     <None Include="edk_utils.dll" />
   </ItemGroup>
+  <ItemGroup>
+    <Library Include="lib\edk.lib" />
+    <Library Include="lib\edk_utils.lib" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
